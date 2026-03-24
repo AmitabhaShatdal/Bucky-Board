@@ -471,16 +471,17 @@
     if(st==='LOADING')o+=`<div class="bb-loading"><span class="anim-spin">${I.loader}</span><p>Loading listings...</p></div>`;
     if(st==='ERROR')o+=`<div class="bb-error"><div class="bb-error-icon">${I.alert}</div><h2>Unable to load data</h2><p>${E(err||'')}</p><button class="bb-btn bb-btn-outline" onclick="fetchData()">Try Again</button></div>`;
     if(st==='READY'&&ds){const rows=filtered();dRows=rows;const showG=view==='grid'||isMerch||isCP,showM=isLease&&view==='map';
-    o+=`<div style="display:${showG?'block':'none'}">`;if(rows.length){o+=`<div class="bb-grid">`;rows.forEach((r,i)=>o+=cardHTML(r,ds.mapping,i));o+=`</div>`}else{const c=ct(),ei=c==='carpool'?I.car:(c==='sale'||c==='wanted'?I.bag:I.home),et=c==='carpool'?'No rides found right now.':(c==='sale'||c==='wanted'?'No marketplace items found.':'No listings found matching your filters.');o+=`<div class="bb-empty"><div class="bb-empty-icon">${ei}</div><p class="main">${et}</p><p class="sub">Try adjusting filters or check back later.</p></div>`}o+=`</div>`;
+    o+=`<div id="bb-grid-wrap" style="display:${showG?'block':'none'}">`;if(rows.length){o+=`<div class="bb-grid">`;rows.forEach((r,i)=>o+=cardHTML(r,ds.mapping,i));o+=`</div>`}else{const c=ct(),ei=c==='carpool'?I.car:(c==='sale'||c==='wanted'?I.bag:I.home),et=c==='carpool'?'No rides found right now.':(c==='sale'||c==='wanted'?'No marketplace items found.':'No listings found matching your filters.');o+=`<div class="bb-empty"><div class="bb-empty-icon">${ei}</div><p class="main">${et}</p><p class="sub">Try adjusting filters or check back later.</p></div>`}o+=`</div>`;
     if(isLease)o+=`<div style="display:${showM?'block':'none'}"><div class="bb-map-wrap"><div id="map-container" style="width:100%;height:100%"></div></div></div>`}
     o+=`</div></div>`;app.innerHTML=o;if(st==='READY'&&isLease&&view==='map')setTimeout(()=>initMap(),100)}
     /* ==== EVENTS ==== */
     function switchTab(id){tabId=id;if(id!=='Lease Transfers')view='grid';destroyMap();fetchData()}
     function setV(m){view=m;render();if(m==='map')setTimeout(()=>initMap(),100)}
     function onPSlide(el,which){const rng=pb.max-pb.min,step=rng<=100?1:rng<=500?5:rng<=2000?10:rng<=10000?50:100,gap=step*2;const minEl=document.getElementById('pr-min'),maxEl=document.getElementById('pr-max');let mn=Number(minEl.value),mx=Number(maxEl.value);if(which==='min'){mn=Math.min(Number(el.value),mx-gap);el.value=mn}else{mx=Math.max(Number(el.value),mn+gap);el.value=mx}fl.minP=mn;fl.maxP=mx;const mnPct=pb.max===pb.min?0:((mn-pb.min)/(pb.max-pb.min))*100;const mxPct=pb.max===pb.min?100:((mx-pb.min)/(pb.max-pb.min))*100;const act=document.getElementById('pr-active');if(act){act.style.left=mnPct+'%';act.style.right=(100-mxPct)+'%'}const pvMin=document.getElementById('pv-min'),pvMax=document.getElementById('pv-max');if(pvMin)pvMin.textContent='$'+mn.toLocaleString();if(pvMax)pvMax.textContent='$'+mx.toLocaleString()}
-    function onPCommit(){render()}
-    function onRoom(el){fl.rooms=el.value;render()}
-    function onCat(el){fl.cat=el.value;render()}
+    function renderGrid(){const wrap=document.getElementById('bb-grid-wrap');if(!wrap||!ds)return;const rows=filtered();dRows=rows;let g='';if(rows.length){g=`<div class="bb-grid">`;rows.forEach((r,i)=>g+=cardHTML(r,ds.mapping,i));g+=`</div>`}else{const c=ct(),ei=c==='carpool'?I.car:(c==='sale'||c==='wanted'?I.bag:I.home),et=c==='carpool'?'No rides found right now.':(c==='sale'||c==='wanted'?'No marketplace items found.':'No listings found matching your filters.');g=`<div class="bb-empty"><div class="bb-empty-icon">${ei}</div><p class="main">${et}</p><p class="sub">Try adjusting filters or check back later.</p></div>`}wrap.innerHTML=g}
+    function onPCommit(){renderGrid()}
+    function onRoom(el){fl.rooms=el.value;renderGrid()}
+    function onCat(el){fl.cat=el.value;renderGrid()}
     function clearFl(){fl={minP:pb.min,maxP:pb.max,rooms:'',cat:''};render()}
     /* ==== BOOT ==== */
     fetchData();
