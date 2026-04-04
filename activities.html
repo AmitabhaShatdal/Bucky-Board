@@ -629,20 +629,15 @@
       slIsLoading = true;
       setSlRefreshState(true);
 
-      var PROXY='https://wandering-darkness-5634.drovers-dander-7p.workers.dev/?url=';
-      function fetchProxy(url){
-        return fetch(url);
-      }
-      function fetchProxied(url){
-        return fetch(PROXY+encodeURIComponent(url))
-          .then(function(r){if(!r.ok)throw new Error('Proxy error: '+r.status);return r;});
-      }
+
       var now=new Date();
       var container=document.getElementById('events-container');
       container.innerHTML='<div class="events-loading"><div class="spin"></div><p>Loading events...</p></div>';
       var evList=null;
       var hasItems=false;
       var seen={};
+
+      function fetchProxy(url){ return fetch(url); }
 
       function ensureList(){
         if(!evList){
@@ -680,19 +675,15 @@
         }
       }
 
-      // 1. Fetch athletics (JSON, fast) in parallel
-      var d1=dateStr(now);
-      var w2=new Date(now.getTime()+7*86400000);
-      var w3=new Date(now.getTime()+14*86400000);
-      var athUrls=[
-        'https://uwbadgers.com/api/v2/Calendar/events?date='+d1,
-        'https://uwbadgers.com/api/v2/Calendar/events?date='+dateStr(w2),
-        'https://uwbadgers.com/api/v2/Calendar/events?date='+dateStr(w3)
-      ];
+      // ── helpers ──────────────────────────────────────────────────
+      function decodeHTML(s){var d=document.createElement('div');d.innerHTML=s;return d.textContent||d.innerText||s;}
+      function isVirtual(loc){var l=loc.toLowerCase();return l.includes('virtual')||l.includes('online')||l.includes('zoom')||l.includes('webinar')||l.includes('teams meeting');}
+
+      // ── 1. Athletics (3 weeks, direct) ───────────────────────────
       var athSeen={};
-      var athPromise=Promise.all(athUrls.map(function(url){
-        return fetchProxy(url)
-          .then(function(r){return r.json()})
+      var athPromise=Promise.all([0,7,14].map(function(offset){
+        return fetch('https://uwbadgers.com/api/v2/Calendar/events?date='+dateStr(new Date(now.getTime()+offset*86400000)))
+          .then(function(r){return r.json();})
           .then(function(days){
             days.forEach(function(day){
               if(!day.events)return;
@@ -701,126 +692,101 @@
                 if(!ev.location||ev.location.indexOf('Madison')===-1)return;
                 if(athSeen[ev.id])return;
                 athSeen[ev.id]=true;
-                // Parse the time string to get a proper timestamp for sorting
                 var ts=dt.getTime();
                 var parsed=parseTimeStr(ev.time);
-                if(parsed){
-                  ts=new Date(dt.getFullYear(),dt.getMonth(),dt.getDate(),parsed.hours,parsed.minutes).getTime();
-                }
+                if(parsed)ts=new Date(dt.getFullYear(),dt.getMonth(),dt.getDate(),parsed.hours,parsed.minutes).getTime();
                 insertSorted(renderGameCard(ev,dt,ts),ts);
               });
             });
           }).catch(function(){});
       }));
 
-      // 2. Fetch music events (ICS, current + next month)
-      var musicSeen={};
-      var musicMonth1='https://music.wisc.edu/events/month/?ical=1';
-      var nextMonth=new Date(now.getFullYear(),now.getMonth()+1,1);
-      var musicMonth2='https://music.wisc.edu/events/month/'+nextMonth.getFullYear()+'-'+pad(nextMonth.getMonth()+1)+'/?ical=1';
-      Promise.all([musicMonth1,musicMonth2].map(function(url){
-        return fetchProxied(url)
-          .then(function(r){return r.text()})
-          .then(function(raw){
-            raw=raw.replace(/\r?\n[ \t]/g,'');
-            var blocks=raw.split('BEGIN:VEVENT').slice(1);
-            var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-            blocks.forEach(function(b){
-              var ev=parseICSBlock(b);
-              if(!ev||!ev.start)return;
-              if(ev.start<today)return;
-              var key='music|'+ev.title+'|'+ev.start.getTime();
-              if(musicSeen[key])return;
-              musicSeen[key]=true;
-              insertSorted(renderMusicCard(ev),ev.start.getTime());
-            });
-          }).catch(function(){});
-      }));
-
-      // 3. Fetch student events from Google Sheet
-      (function(){
-        var sheetId='1iITqjjqjmRiQ4nyJeK8-7Ryx68taW7j4J-dI6JmK3iI';
-        var csvUrl='https://docs.google.com/spreadsheets/d/'+sheetId+'/export?format=csv&gid=0';
-        var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-        fetch(csvUrl)
-          .then(function(r){return r.text()})
-          .then(function(csv){
-            var parsed=parseCSV(csv);
-            if(!parsed.rows.length)return;
-            parsed.rows.forEach(function(row){
-              if(!row['Date'])return;
-              var result=renderStudentCard(row);
-              if(!result)return;
-              // Only show events from today onward
-              var evDate=new Date(row['Date']);
-              if(isNaN(evDate.getTime()))return;
-              if(evDate<today&&result.ts<today.getTime())return;
-              var key='student|'+(row['Title']||'')+'|'+result.ts;
-              if(seen[key])return;
-              seen[key]=true;
-              insertSorted(result.html,result.ts);
-            });
-          }).catch(function(e){console.log('Student events error:',e)});
-      })();
-
-      // 4. Fetch campus events — one request per day for 21 days, paginating if needed
-      // Collect all events first, then render in one batch
-      function collectCampusDay(events, filterPast, bucket){
-        if(!Array.isArray(events))return;
-        events.forEach(function(ev){
-          if(!ev.startDate)return;
-          var start=new Date(ev.startDate);
-          var end=ev.endDate?new Date(ev.endDate):null;
-          if(filterPast&&end&&end<now)return;
-          var loc=(ev.location||'').trim();
-          if(!loc)return;
-          var ll=loc.toLowerCase();
-          if(ll.includes('virtual')||ll.includes('online')||ll.includes('zoom')||ll.includes('webinar')||ll.includes('teams meeting'))return;
-          bucket.push({
-            title:ev.title||'Untitled Event',
-            start:start,end:end,location:loc,
-            desc:(ev.description||'').replace(/<[^>]+>/g,'').trim(),
-            url:ev.url||'',uid:String(ev.id||'')
+      // ── 2. Music (REST API, 5 weeks, all pages in parallel) ──────
+      var musicBucket=[];
+      var musicBase='https://music.wisc.edu/wp-json/tribe/events/v1/events'
+        +'?starts_after='+dateStr(new Date(now.getFullYear(),now.getMonth(),now.getDate()-1))
+        +'&ends_before='+dateStr(new Date(now.getFullYear(),now.getMonth(),now.getDate()+35))
+        +'&per_page=50';
+      function processMusicPage(data){
+        if(!data||!Array.isArray(data.events))return 0;
+        data.events.forEach(function(ev){
+          musicBucket.push({
+            title:decodeHTML(ev.title||''),
+            start:new Date(ev.start_date),
+            end:ev.end_date?new Date(ev.end_date):null,
+            location:ev.venue&&ev.venue.venue?ev.venue.venue:'',
+            category:ev.categories&&ev.categories.length?ev.categories[0].name:'',
+            desc:(ev.description||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim(),
+            url:ev.url||''
           });
         });
+        return data.total_pages||1;
       }
+      var musicPromise=fetch(musicBase+'&page=1')
+        .then(function(r){return r.json();})
+        .then(function(data){
+          var total=processMusicPage(data);
+          var extras=[];
+          for(var p=2;p<=total;p++) extras.push(fetch(musicBase+'&page='+p).then(function(r){return r.json();}).then(processMusicPage));
+          return Promise.all(extras);
+        })
+        .then(function(){musicBucket.forEach(function(ev){hasItems=true;insertSorted(renderMusicCard(ev),ev.start.getTime());});})
+        .catch(function(e){console.log('Music error:',e);});
 
-      function fetchDayAllPages(day, filterPast, bucket){
+      // ── 3. Student events (Google Sheet) ─────────────────────────
+      var studentToday=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      var studentPromise=fetch('https://docs.google.com/spreadsheets/d/1iITqjjqjmRiQ4nyJeK8-7Ryx68taW7j4J-dI6JmK3iI/export?format=csv&gid=0')
+        .then(function(r){return r.text();})
+        .then(function(csv){
+          var parsed=parseCSV(csv);
+          parsed.rows.forEach(function(row){
+            if(!row['Date'])return;
+            var result=renderStudentCard(row);
+            if(!result)return;
+            var evDate=new Date(row['Date']);
+            if(isNaN(evDate.getTime())||evDate<studentToday&&result.ts<studentToday.getTime())return;
+            var key='student|'+(row['Title']||'')+'|'+result.ts;
+            if(seen[key])return;
+            seen[key]=true;
+            insertSorted(result.html,result.ts);
+          });
+        }).catch(function(e){console.log('Student error:',e);});
+
+      // ── 4. Campus events (today.wisc, 21 days in parallel) ───────
+      var campusPromise=Promise.all(Array.from({length:21},function(_,i){
+        var day=dateStr(new Date(now.getFullYear(),now.getMonth(),now.getDate()+i));
         function fetchPage(page){
-          var url='https://today.wisc.edu/events/day/'+day+'.json?page='+page;
-          return fetch(url)
+          return fetch('https://today.wisc.edu/events/day/'+day+'.json?page='+page)
             .then(function(r){return r.json();})
-            .then(function(events){
-              if(!Array.isArray(events)||events.length===0)return;
-              collectCampusDay(events, filterPast, bucket);
-              if(events.length>=40)return fetchPage(page+1);
+            .then(function(evs){
+              if(!Array.isArray(evs)||!evs.length)return;
+              evs.forEach(function(ev){
+                if(!ev.startDate)return;
+                var start=new Date(ev.startDate);
+                var end=ev.endDate?new Date(ev.endDate):null;
+                if(i===0&&end&&end<now)return;
+                var loc=(ev.location||'').trim();
+                if(!loc||isVirtual(loc))return;
+                hasItems=true;
+                insertSorted(renderCampusCard({
+                  title:ev.title||'Untitled Event',start:start,end:end,location:loc,
+                  desc:(ev.description||'').replace(/<[^>]+>/g,'').trim(),
+                  url:ev.url||'',uid:String(ev.id||'')
+                }),start.getTime());
+              });
+              if(evs.length>=40)return fetchPage(page+1);
             });
         }
         return fetchPage(1).catch(function(){});
-      }
+      }));
 
-      var campusBucket=[];
-      var dayPromises=[];
-      for(var di=0;di<21;di++){
-        var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+di);
-        dayPromises.push(fetchDayAllPages(dateStr(d), di===0, campusBucket));
-      }
-
-      var campusPromise=Promise.all(dayPromises).then(function(){
-        campusBucket.forEach(function(ev){
-          hasItems=true;
-          insertSorted(renderCampusCard(ev),ev.start.getTime());
-        });
-      });
-
-      Promise.all([athPromise,campusPromise]).then(function(){
+      // ── Remove spinner when all sources finish ────────────────────
+      Promise.all([athPromise,musicPromise,studentPromise,campusPromise]).then(function(){
         var sp=container.querySelector('.events-loading');
         if(sp)sp.remove();
         slIsLoading=false;
         setSlRefreshState(false);
-        if(!hasItems){
-          container.innerHTML='<div class="events-error"><p>No upcoming events found.</p><a href="https://today.wisc.edu/events" target="_blank" rel="noopener noreferrer">View on today.wisc.edu &rarr;</a></div>';
-        }
+        if(!hasItems)container.innerHTML='<div class="events-error"><p>No upcoming events found.</p><a href="https://today.wisc.edu/events" target="_blank" rel="noopener noreferrer">View on today.wisc.edu &rarr;</a></div>';
       });
     }
 
