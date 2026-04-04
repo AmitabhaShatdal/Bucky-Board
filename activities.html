@@ -629,7 +629,16 @@
       slIsLoading = true;
       setSlRefreshState(true);
 
-      var proxy='https://corsproxy.io/?';
+      var proxies=['https://api.allorigins.win/raw?url=','https://corsproxy.io/?'];
+      function fetchProxy(url){
+        function tryNext(i){
+          if(i>=proxies.length)return fetch(url);
+          return fetch(proxies[i]+encodeURIComponent(url))
+            .then(function(r){if(!r.ok)throw new Error(r.status);return r;})
+            .catch(function(){return tryNext(i+1);});
+        }
+        return tryNext(0);
+      }
       var now=new Date();
       var container=document.getElementById('events-container');
       container.innerHTML='<div class="events-loading"><div class="spin"></div><p>Loading events...</p></div>';
@@ -684,7 +693,7 @@
       ];
       var athSeen={};
       var athPromise=Promise.all(athUrls.map(function(url){
-        return fetch(proxy+encodeURIComponent(url))
+        return fetchProxy(url)
           .then(function(r){return r.json()})
           .then(function(days){
             days.forEach(function(day){
@@ -712,7 +721,7 @@
       var nextMonth=new Date(now.getFullYear(),now.getMonth()+1,1);
       var musicMonth2='https://music.wisc.edu/events/month/'+nextMonth.getFullYear()+'-'+pad(nextMonth.getMonth()+1)+'/?ical=1';
       Promise.all([musicMonth1,musicMonth2].map(function(url){
-        return fetch(proxy+encodeURIComponent(url))
+        return fetchProxy(url)
           .then(function(r){return r.text()})
           .then(function(raw){
             raw=raw.replace(/\r?\n[ \t]/g,'');
@@ -765,7 +774,7 @@
 
       var dayPromises=dates.map(function(day){
         var url='https://today.wisc.edu/events/day/'+day+'.ics';
-        return fetch(proxy+encodeURIComponent(url))
+        return fetchProxy(url)
           .then(function(r){return r.text();})
           .then(function(raw){
             raw=raw.replace(/\r?\n[ \t]/g,'');
