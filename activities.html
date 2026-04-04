@@ -763,19 +763,14 @@
           }).catch(function(e){console.log('Student events error:',e)});
       })();
 
-      // 4. Fetch campus events — day JSON for today, range JSON for next 20 days
-      var tomorrow=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
-      var endDate=new Date(now.getFullYear(),now.getMonth(),now.getDate()+20);
-
-      function processCampusJSON(events, filterPast){
+      // 4. Fetch campus events — one request per day for 21 days, paginating if needed
+      function processCampusDay(events, filterPast){
         if(!Array.isArray(events))return;
         events.forEach(function(ev){
           if(!ev.startDate)return;
           var start=new Date(ev.startDate);
           var end=ev.endDate?new Date(ev.endDate):null;
-          // For today: skip events that have already ended (but keep all-day events)
-          if(filterPast&&!ev.allDayEvent&&end&&end<now)return;
-          if(filterPast&&!ev.allDayEvent&&!end&&start<now)return;
+          if(filterPast&&end&&end<now)return;
           var loc=(ev.location||'').trim();
           if(!loc)return;
           var ll=loc.toLowerCase();
@@ -791,19 +786,28 @@
         });
       }
 
-      // Today via day JSON endpoint
-      var todayUrl='https://today.wisc.edu/events/day/'+dateStr(now)+'.json';
-      var todayPromise=fetch(todayUrl)
-        .then(function(r){return r.json();})
-        .then(function(events){processCampusJSON(events,true);})
-        .catch(function(){});
+      function fetchDayAllPages(day, filterPast){
+        function fetchPage(page){
+          var url='https://today.wisc.edu/events/day/'+day+'.json?page='+page;
+          return fetch(url)
+            .then(function(r){return r.json();})
+            .then(function(events){
+              if(!Array.isArray(events)||events.length===0)return;
+              processCampusDay(events, filterPast);
+              // If a full page came back, there may be more
+              if(events.length>=40)return fetchPage(page+1);
+            });
+        }
+        return fetchPage(1).catch(function(){});
+      }
 
-      // Next 20 days via range JSON (no dedup with today)
-      var rangeUrl='https://today.wisc.edu/events.json?start='+dateStr(tomorrow)+'&end='+dateStr(endDate)+'&per_page=100';
-      var campusPromise=Promise.all([
-        todayPromise,
-        fetch(rangeUrl).then(function(r){return r.json();}).then(function(ev){processCampusJSON(ev,false);}).catch(function(){})
-      ]);
+      var dayPromises=[];
+      for(var di=0;di<21;di++){
+        var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+di);
+        dayPromises.push(fetchDayAllPages(dateStr(d), di===0));
+      }
+
+      var campusPromise=Promise.all(dayPromises);
 
       Promise.all([athPromise,campusPromise]).then(function(){
         var sp=container.querySelector('.events-loading');
