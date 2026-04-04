@@ -763,35 +763,38 @@
           }).catch(function(e){console.log('Student events error:',e)});
       })();
 
-      // 4. Fetch campus events — all 21 days in parallel
-      var dates=[];
-      for(var i=0;i<21;i++){
-        var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i);
-        dates.push(dateStr(d));
-      }
+      // 4. Fetch campus events — single JSON call for 21 days
+      var endDate=new Date(now.getFullYear(),now.getMonth(),now.getDate()+20);
+      var campusUrl='https://today.wisc.edu/events.json?start='+dateStr(now)+'&end='+dateStr(endDate)+'&per_page=100';
+      var campusPromise=fetch(campusUrl)
+        .then(function(r){return r.json();})
+        .then(function(events){
+          if(!Array.isArray(events))return;
+          events.forEach(function(ev){
+            if(!ev.startDate)return;
+            var start=new Date(ev.startDate);
+            var end=ev.endDate?new Date(ev.endDate):null;
+            var loc=(ev.location||'').trim();
+            if(!loc)return;
+            var ll=loc.toLowerCase();
+            if(ll.includes('virtual')||ll.includes('online')||ll.includes('zoom')||ll.includes('webinar')||ll.includes('teams meeting'))return;
+            var key=(ev.title||'')+'|'+start.getTime();
+            if(seen[key])return;
+            seen[key]=true;
+            var mapped={
+              title:ev.title||'Untitled Event',
+              start:start,
+              end:end,
+              location:loc,
+              desc:(ev.description||'').replace(/<[^>]+>/g,'').trim(),
+              url:ev.url||'',
+              uid:String(ev.id||'')
+            };
+            insertSorted(renderCampusCard(mapped),start.getTime());
+          });
+        }).catch(function(e){console.log('Campus events error:',e);});
 
-      var dayPromises=dates.map(function(day){
-        var url='https://today.wisc.edu/events/day/'+day+'.ics';
-        return fetchProxied(url)
-          .then(function(r){return r.text();})
-          .then(function(raw){
-            raw=raw.replace(/\r?\n[ \t]/g,'');
-            var blocks=raw.split('BEGIN:VEVENT').slice(1);
-            blocks.forEach(function(b){
-              var ev=parseICSBlock(b);
-              if(!ev)return;
-              if(!ev.location)return;
-              var ll=ev.location.toLowerCase();
-              if(ll.includes('virtual')||ll.includes('online')||ll.includes('zoom')||ll.includes('webinar')||ll.includes('teams meeting'))return;
-              var key=ev.title+'|'+ev.start.getTime();
-              if(seen[key])return;
-              seen[key]=true;
-              insertSorted(renderCampusCard(ev),ev.start.getTime());
-            });
-          }).catch(function(){});
-      });
-
-      Promise.all([athPromise].concat(dayPromises)).then(function(){
+      Promise.all([athPromise,campusPromise]).then(function(){
         var sp=container.querySelector('.events-loading');
         if(sp)sp.remove();
         slIsLoading=false;
