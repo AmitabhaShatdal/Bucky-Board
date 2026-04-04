@@ -734,7 +734,7 @@
             end:ev.end_date?new Date(ev.end_date):null,
             location:ev.venue&&ev.venue.venue?ev.venue.venue:'',
             category:ev.categories&&ev.categories.length?ev.categories[0].name:'',
-            desc:(ev.description||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim(),
+            desc:(ev.description||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&#(\d+);/g,function(_,n){return String.fromCharCode(n);}).replace(/&[a-z]+;/g,function(e){var d=document.createElement('div');d.innerHTML=e;return d.textContent;}).trim(),
             url:ev.url||''
           });
         });
