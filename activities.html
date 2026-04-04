@@ -764,7 +764,8 @@
       })();
 
       // 4. Fetch campus events — one request per day for 21 days, paginating if needed
-      function processCampusDay(events, filterPast){
+      // Collect all events first, then render in one batch
+      function collectCampusDay(events, filterPast, bucket){
         if(!Array.isArray(events))return;
         events.forEach(function(ev){
           if(!ev.startDate)return;
@@ -775,39 +776,42 @@
           if(!loc)return;
           var ll=loc.toLowerCase();
           if(ll.includes('virtual')||ll.includes('online')||ll.includes('zoom')||ll.includes('webinar')||ll.includes('teams meeting'))return;
-          var mapped={
+          bucket.push({
             title:ev.title||'Untitled Event',
             start:start,end:end,location:loc,
             desc:(ev.description||'').replace(/<[^>]+>/g,'').trim(),
             url:ev.url||'',uid:String(ev.id||'')
-          };
-          hasItems=true;
-          insertSorted(renderCampusCard(mapped),start.getTime());
+          });
         });
       }
 
-      function fetchDayAllPages(day, filterPast){
+      function fetchDayAllPages(day, filterPast, bucket){
         function fetchPage(page){
           var url='https://today.wisc.edu/events/day/'+day+'.json?page='+page;
           return fetch(url)
             .then(function(r){return r.json();})
             .then(function(events){
               if(!Array.isArray(events)||events.length===0)return;
-              processCampusDay(events, filterPast);
-              // If a full page came back, there may be more
+              collectCampusDay(events, filterPast, bucket);
               if(events.length>=40)return fetchPage(page+1);
             });
         }
         return fetchPage(1).catch(function(){});
       }
 
+      var campusBucket=[];
       var dayPromises=[];
       for(var di=0;di<21;di++){
         var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+di);
-        dayPromises.push(fetchDayAllPages(dateStr(d), di===0));
+        dayPromises.push(fetchDayAllPages(dateStr(d), di===0, campusBucket));
       }
 
-      var campusPromise=Promise.all(dayPromises);
+      var campusPromise=Promise.all(dayPromises).then(function(){
+        campusBucket.forEach(function(ev){
+          hasItems=true;
+          insertSorted(renderCampusCard(ev),ev.start.getTime());
+        });
+      });
 
       Promise.all([athPromise,campusPromise]).then(function(){
         var sp=container.querySelector('.events-loading');
