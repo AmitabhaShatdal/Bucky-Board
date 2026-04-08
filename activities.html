@@ -555,9 +555,10 @@
       }
 
       // Format time display
+      function fmt12(s){var p=parseTimeStr(s);if(!p)return s;var h=p.hours,m=p.minutes,ampm=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+ampm;}
       var timeDisplay='';
-      if(startTime&&endTime)timeDisplay=startTime+' \u2013 '+endTime;
-      else if(startTime)timeDisplay=startTime;
+      if(startTime&&endTime)timeDisplay=fmt12(startTime)+' \u2013 '+fmt12(endTime);
+      else if(startTime)timeDisplay=fmt12(startTime);
       else timeDisplay='All day';
 
       var html='<div class="ev student-ev" data-ts="'+ts+'" data-source="student"><div class="ev-inner">';
