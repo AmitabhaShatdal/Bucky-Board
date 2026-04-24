@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Bucky Board Deals - Exclusive discounts from Madison businesses for UW-Madison students.">
     <title>Student Deals - Bucky Board</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%238B0000'/><text x='12' y='17.5' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='16' fill='white'>B</text></svg>">
+    <link rel="icon" href="BBFavicon.png" type="image/png">
     <style>
       :root {
         --cream:#FAF7F2; --cream2:#F3EDE3; --cream3:#EDE5D8;
@@ -60,6 +60,8 @@
       body.nav-open .nav-mobile a:nth-child(4){animation-delay:0.14s}
       body.nav-open .nav-mobile a:nth-child(5){animation-delay:0.17s}
       body.nav-open .nav-mobile a:nth-child(6){animation-delay:0.2s}
+      body.nav-open .nav-mobile a:nth-child(7){animation-delay:0.23s}
+      body.nav-open .nav-mobile a:nth-child(8){animation-delay:0.26s}
       @media(max-width:640px){.nav{display:none !important}.nav-toggle{display:flex}}
 
       .page{flex:1}
@@ -291,22 +293,23 @@
       .deals-empty p{font-size:0.9375rem;color:var(--warm4)}
 
       /* ── FOOTER ── */
-      .ftr{background:var(--cream2);color:var(--warm3);padding:1.5rem;border-top:1px solid var(--warm6);margin-top:auto}
+      .ftr{background:#FAF7F2;color:var(--s500);padding:1.5rem;border-top:1px solid var(--s200);margin-top:auto}
       .ftr-in{max-width:64rem;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem}
       .ftr p{font-size:0.875rem}
       .ftr-links{display:flex;gap:1.5rem}
-      .ftr-links a{font-size:0.8125rem;color:var(--warm4);transition:color 0.2s}
-      .ftr-links a:hover{color:var(--wine)}
+      .ftr-links a{font-size:0.8125rem;color:#94a3b8;transition:color 0.2s}
+      .ftr-links a:hover{color:#8b0000}
     </style>
   </head>
   <body>
     <header class="hdr"><div class="hdr-in">
-      <a href="index.html" class="logo"><div class="logo-mark">B</div><div class="logo-text">Bucky Board</div></a>
+      <a href="index.html" class="logo"><img src="BBFavicon.png" alt="Bucky Board" style="width:2rem;height:2rem;border-radius:0.5rem;display:block;object-fit:cover"><div class="logo-text">Bucky Board</div></a>
             <nav class="nav">
         <a href="housing.html">Housing</a>
         <a href="marketplace.html">Marketplace</a>
         <a href="deals.html" class="active">Deals</a>
         <a href="activities.html">Activities</a>
+        <a href="jobs.html">Jobs</a>
         <a href="email.html">Email</a>
         <a href="about.html">About</a>
       </nav>
@@ -317,7 +320,8 @@
       <a href="marketplace.html">Marketplace</a>
       <a href="deals.html" class="active">Deals</a>
       <a href="activities.html">Activities</a>
-      <a href="email.html">Email</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="email.html">Email</a>
       <a href="about.html">About</a>
     </nav></div>
 
@@ -380,6 +384,7 @@
         <a href="marketplace.html">Marketplace</a>
         <a href="deals.html">Deals</a>
         <a href="activities.html">Activities</a>
+        <a href="jobs.html">Jobs</a>
         <a href="email.html">Email</a>
         <a href="about.html">About</a>
       </div>
@@ -526,7 +531,7 @@
         const rows = parseCSV(text);
         if (rows.length < 2) throw new Error('No data rows');
         allDeals = rows.slice(1)
-          .filter(r => (r[COL.STATUS]||'').trim().toLowerCase() === 'published')
+          .filter(r => { const s=(r[COL.STATUS]||'').trim().toLowerCase(); return s==='published'||s==='draft'; })
           .map(r => ({ name:r[COL.NAME]||'', image:r[COL.IMAGE]||'', category:r[COL.CATEGORY]||'', slug:r[COL.SLUG]||'', desc:r[COL.DESC]||'', link:r[COL.LINK]||'', restrictions:r[COL.RESTRICTIONS]||'' }))
           .filter(d => d.name);
         buildCatBar(allDeals);

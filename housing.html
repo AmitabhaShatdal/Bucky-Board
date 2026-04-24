@@ -6,7 +6,7 @@
     <meta name="description" content="Bucky Board - Housing, Marketplace & Carpool listings for students">
     <title>Housing - Bucky Board</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%238B0000'/><text x='12' y='17.5' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='16' fill='white'>B</text></svg>">
+    <link rel="icon" href="BBFavicon.png" type="image/png">
     <style>
       :root {
         --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-300:#cbd5e1;
@@ -68,6 +68,8 @@
       body.nav-open .nav-mobile a:nth-child(4){animation-delay:0.14s}
       body.nav-open .nav-mobile a:nth-child(5){animation-delay:0.17s}
       body.nav-open .nav-mobile a:nth-child(6){animation-delay:0.2s}
+      body.nav-open .nav-mobile a:nth-child(7){animation-delay:0.23s}
+      body.nav-open .nav-mobile a:nth-child(8){animation-delay:0.26s}
       @media(max-width:640px){.nav{display:none !important}.nav-toggle{display:flex}}
 
       /* ===== FOOTER ===== */
@@ -380,12 +382,13 @@
   </head>
   <body>
     <header class="hdr"><div class="hdr-in">
-      <a href="index.html" class="logo"><div class="logo-mark">B</div><div class="logo-text">Bucky Board</div></a>
+      <a href="index.html" class="logo"><img src="BBFavicon.png" alt="Bucky Board" style="width:2rem;height:2rem;border-radius:0.5rem;display:block;object-fit:cover"><div class="logo-text">Bucky Board</div></a>
                   <nav class="nav">
         <a href="housing.html" class="active">Housing</a>
         <a href="marketplace.html">Marketplace</a>
         <a href="deals.html">Deals</a>
         <a href="activities.html">Activities</a>
+        <a href="jobs.html">Jobs</a>
         <a href="email.html">Email</a>
         <a href="about.html">About</a>
       </nav>
@@ -396,7 +399,8 @@
       <a href="marketplace.html">Marketplace</a>
       <a href="deals.html">Deals</a>
       <a href="activities.html">Activities</a>
-      <a href="email.html">Email</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="email.html">Email</a>
       <a href="about.html">About</a>
     </nav></div>
 

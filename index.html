@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="Bucky Board — The student hub for UW-Madison.">
   <title>Bucky Board</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%238B0000'/><text x='12' y='17.5' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='16' fill='white'>B</text></svg>">
+  <link rel="icon" href="BBFavicon.png" type="image/png">
   <style>
     :root {
       --s200:#e2e8f0; --s300:#cbd5e1; --s400:#94a3b8;
@@ -61,6 +61,8 @@
     body.nav-open .nav-mobile a:nth-child(4){animation-delay:0.14s}
     body.nav-open .nav-mobile a:nth-child(5){animation-delay:0.17s}
     body.nav-open .nav-mobile a:nth-child(6){animation-delay:0.20s}
+    body.nav-open .nav-mobile a:nth-child(7){animation-delay:0.23s}
+    body.nav-open .nav-mobile a:nth-child(8){animation-delay:0.26s}
     @media(max-width:640px) { .nav { display: none !important; } .nav-toggle { display: flex; } }
 
     /* ── HERO ─────────────────────────────── */
@@ -80,7 +82,7 @@
       letter-spacing: -0.01em;
       line-height: 1.4;
       color: var(--s600);
-      opacity: 0; animation: rise 0.9s cubic-bezier(0.22,1,0.36,1) 0.15s both;
+      opacity: 0; animation: none; opacity: 1;
     }
 
     @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
@@ -152,7 +154,7 @@
   <header class="hdr">
     <div class="hdr-in">
       <a href="index.html" class="logo">
-        <div class="logo-mark">B</div>
+        <img src="BBFavicon.png" alt="Bucky Board" style="width:2rem;height:2rem;border-radius:0.5rem;display:block;object-fit:cover">
         <div class="logo-text">Bucky Board</div>
       </a>
       <nav class="nav">
@@ -160,6 +162,7 @@
         <a href="marketplace.html">Marketplace</a>
         <a href="deals.html">Deals</a>
         <a href="activities.html">Activities</a>
+        <a href="jobs.html">Jobs</a>
         <a href="email.html">Email</a>
         <a href="about.html">About</a>
       </nav>
@@ -172,13 +175,16 @@
       <a href="marketplace.html">Marketplace</a>
       <a href="deals.html">Deals</a>
       <a href="activities.html">Activities</a>
+      <a href="jobs.html">Jobs</a>
       <a href="email.html">Email</a>
       <a href="about.html">About</a>
     </nav>
   </div>
 
   <section class="hero">
-    <h1 class="hero-h1">Built for Badgers, by Badgers.</h1>
+    <img src="BBFavicon.png" alt="Bucky Board" style="width:8rem;height:8rem;border-radius:1.5rem;margin:1.5rem auto 0;display:block">
+    <div style="text-align:center;font-size:1.75rem;font-weight:700;color:var(--r700);letter-spacing:-0.02em;margin-top:0.75rem">Bucky Board</div>
+    <h1 class="hero-h1" style="margin-top:0.5rem">Built for Badgers, by Badgers.</h1>
   </section>
 
   <section class="services">
@@ -221,11 +227,13 @@
           <span class="svc-link">Browse deals <svg class="svc-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
         </a>
 
-        <a href="about.html" class="svc">
-          <div class="svc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div>
-          <div class="svc-name">About</div>
-          <div class="svc-desc">Our mission, our services, and how to get in touch with us.</div>
-          <span class="svc-link">Our story <svg class="svc-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+
+
+        <a href="jobs.html" class="svc">
+          <div class="svc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="12"/></svg></div>
+          <div class="svc-name">Jobs</div>
+          <div class="svc-desc">Local internships, part-time gigs, research positions, and full-time roles — posted for Badgers.</div>
+          <span class="svc-link">Find jobs <svg class="svc-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
         </a>
 
       </div>
@@ -240,6 +248,7 @@
         <a href="marketplace.html">Marketplace</a>
         <a href="deals.html">Deals</a>
         <a href="activities.html">Activities</a>
+        <a href="jobs.html">Jobs</a>
         <a href="email.html">Email</a>
         <a href="about.html">About</a>
       </div>
