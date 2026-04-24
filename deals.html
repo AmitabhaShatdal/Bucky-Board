@@ -531,7 +531,7 @@
         const rows = parseCSV(text);
         if (rows.length < 2) throw new Error('No data rows');
         allDeals = rows.slice(1)
-          .filter(r => { const s=(r[COL.STATUS]||'').trim().toLowerCase(); return s==='published'||s==='draft'; })
+          .filter(r => (r[COL.STATUS]||'').trim().toLowerCase() === 'published')
           .map(r => ({ name:r[COL.NAME]||'', image:r[COL.IMAGE]||'', category:r[COL.CATEGORY]||'', slug:r[COL.SLUG]||'', desc:r[COL.DESC]||'', link:r[COL.LINK]||'', restrictions:r[COL.RESTRICTIONS]||'' }))
           .filter(d => d.name);
         buildCatBar(allDeals);
