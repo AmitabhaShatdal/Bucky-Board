@@ -306,7 +306,7 @@
         else if(rawKey.indexOf('department overview')!==-1)out.deptOverview=val;
         else if(rawKey.indexOf('physical demands')!==-1)out.physical=val;
         else if(rawKey.indexOf('application instructions')!==-1)out.appInstructions=val;
-        else if(rawKey==='contact')out.contact=val;
+        else if(rawKey==='contact')out.contact=td.innerHTML;
         else if(rawKey.indexOf('number of positions')!==-1)out.positions=val;
       });
     }catch(e){}
@@ -765,7 +765,36 @@
       +infoRow('Application Close',j.deadline==='Rolling'?'Rolling':j.deadline)
       +infoRow('Location',j.location)
       +(j.recruiter&&j.recruiter.trim()?(j.recruiterEmail?'<div class="info-row"><span class="lbl">Recruiter</span><span class="val"><a href="mailto:'+E(j.recruiterEmail)+'" style="color:var(--r700);text-decoration:underline;text-underline-offset:2px">'+E(j.recruiter)+'</a></span></div>':infoRow('Recruiter',j.recruiter)):'')
-      +(j.contact?(function(){var ct=String(j.contact||'').trim();return ct?'<div class="info-row"><span class="lbl">Contact</span><span class="val" style="text-align:right;font-size:0.8125rem;white-space:pre-wrap">'+E(ct)+'</span></div>':'';})():'');
+      +(j.contact?(function(){
+        var html=String(j.contact||'');
+        if(!html.trim())return'';
+        // Extract email from mailto: href
+        var emailMatch=html.match(/href=["']mailto:([^"']+)["']/i);
+        var email=emailMatch?emailMatch[1].trim():'';
+        // Extract name: strip all HTML tags, split by newline/br, find first non-empty non-label line
+        // Replace <br> tags with newlines before extracting text
+        var tmp=document.createElement('div');
+        tmp.innerHTML=html.replace(/<br\s*\/?>/gi,'\n');
+        var text=(tmp.textContent||tmp.innerText||'');
+        var lines=text.split(/\n|\r|\t/).map(function(l){return l.trim();}).filter(Boolean);
+        // Priority 1: line starting with "Contact:"
+        var name='';
+        for(var i=0;i<lines.length;i++){
+          var m=lines[i].match(/^contact:\s*(.+)/i);
+          if(m){name=m[1].trim();break;}
+        }
+        // Priority 2: strip any label prefix from first non-email, non-URL line
+        if(!name){
+          for(var i=0;i<lines.length;i++){
+            var l=lines[i].replace(/^(org|name|email|web|website|phone|tel|fax):\s*/i,'').trim();
+            if(l&&l.indexOf('@')===-1&&!/^https?:\/\//i.test(l)){name=l;break;}
+          }
+        }
+        if(!name&&!email)return'';
+        var display=name||email;
+        var inner=email?'<a href="mailto:'+E(email)+'" style="color:var(--r700);text-decoration:underline;text-underline-offset:2px">'+E(display)+'</a>':E(display);
+        return'<div class="info-row"><span class="lbl">Contact</span><span class="val" style="text-align:right;font-size:0.8125rem">'+inner+'</span></div>';
+      })():'');
 
     document.getElementById('detail-box').innerHTML=
       '<button class="modal-close-btn" onclick="closeDetail()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>'
