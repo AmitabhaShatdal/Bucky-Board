@@ -141,12 +141,13 @@
     }
 
     /* ── FOOTER ───────────────────────────── */
-    .ftr { border-top: 1px solid var(--s200); padding: 1.5rem; }
-    .ftr-in { max-width: 64rem; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
-    .ftr p { font-size: 0.875rem; color: var(--s500); }
-    .ftr-links { display: flex; gap: 1.5rem; }
-    .ftr-links a { font-size: 0.8125rem; color: var(--s400); transition: color 0.2s; }
-    .ftr-links a:hover { color: var(--r700); }
+  /* === Sitewide footer === */
+  .ftr{background:#FAF7F2;color:#64748b;padding:1.5rem;border-top:1px solid #e2e8f0;margin-top:auto}
+    .ftr-in{max-width:64rem;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem}
+    .ftr p{font-size:0.875rem}
+    .ftr-links{display:flex;flex-wrap:wrap;gap:1.5rem}
+    .ftr-links a{font-size:0.8125rem;color:#94a3b8;transition:color 0.2s}
+    .ftr-links a:hover{color:#8b0000}
   </style>
 </head>
 <body>
@@ -241,19 +242,19 @@
   </section>
 
   <footer class="ftr">
-    <div class="ftr-in">
-      <p>&copy; <script>document.write(new Date().getFullYear())</script> Bucky Board. All rights reserved.</p>
-      <div class="ftr-links">
-        <a href="housing.html">Housing</a>
-        <a href="marketplace.html">Marketplace</a>
-        <a href="deals.html">Deals</a>
-        <a href="activities.html">Activities</a>
-        <a href="jobs.html">Jobs</a>
-        <a href="email.html">Email</a>
-        <a href="about.html">About</a>
+      <div class="ftr-in">
+        <p>&copy; <script>document.write(new Date().getFullYear())</script> Bucky Board. All rights reserved.</p>
+        <div class="ftr-links">
+          <a href="housing.html">Housing</a>
+          <a href="marketplace.html">Marketplace</a>
+          <a href="deals.html">Deals</a>
+          <a href="activities.html">Activities</a>
+          <a href="jobs.html">Jobs</a>
+          <a href="email.html">Email</a>
+          <a href="about.html">About</a>
+        </div>
       </div>
-    </div>
-  </footer>
+    </footer>
 
   <script>
     function toggleNav(){document.body.classList.toggle('nav-open')}

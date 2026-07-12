@@ -73,9 +73,6 @@
       @media(max-width:640px){.nav{display:none !important}.nav-toggle{display:flex}}
 
       /* ===== FOOTER ===== */
-      .site-footer{background:#FAF7F2;color:var(--slate-500);padding:1rem 1.5rem;border-top:1px solid var(--slate-200);margin-top:auto}
-      .site-footer-inner{max-width:64rem;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem}
-      .site-footer p{font-size:0.875rem}
 
       /* ===== MAIN APP ===== */
       #app{flex:1;background:#FAF7F2}
@@ -107,6 +104,17 @@
       .bb-tab svg{flex-shrink:0}
       .bb-tab-divider{width:1px;height:1.25rem;background:var(--slate-200);margin:0 0.25rem;flex-shrink:0}
       @media(min-width:640px){.bb-tab .tab-label{display:inline}}
+
+      /* ===== SEARCH BAR ===== */
+      .bb-search{max-width:42rem;margin:0 auto 1.25rem;width:100%}
+      .bb-search-wrap{position:relative}
+      .bb-search-input{width:100%;padding:0.75rem 2.75rem 0.75rem 2.75rem;border:1px solid var(--slate-200);border-radius:9999px;background:var(--white);font-family:inherit;font-size:0.9375rem;color:var(--slate-900);box-shadow:0 1px 2px rgba(0,0,0,0.04);transition:border-color 0.15s,box-shadow 0.15s}
+      .bb-search-input::placeholder{color:var(--slate-400)}
+      .bb-search-input:focus{outline:none;border-color:var(--indigo-600);box-shadow:0 0 0 3px rgba(139,0,0,0.08)}
+      .bb-search-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--slate-400);pointer-events:none;display:flex}
+      .bb-search-clear{position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);width:1.75rem;height:1.75rem;border-radius:9999px;border:none;background:var(--slate-100);color:var(--slate-500);display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;font-family:inherit}
+      .bb-search-clear.show{display:flex}
+      .bb-search-clear:hover{background:var(--slate-200);color:var(--slate-700)}
 
       /* ===== SHEET LINK ===== */
       .bb-sheet-link{display:flex;justify-content:center;margin-bottom:1.5rem}
@@ -378,6 +386,13 @@
       .anim-spin{animation:spin 1s linear infinite}
       @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
       .anim-fade-in{animation:fadeIn 0.5s ease forwards}
+    /* === Sitewide footer === */
+    .ftr{background:#FAF7F2;color:#64748b;padding:1.5rem;border-top:1px solid #e2e8f0;margin-top:auto}
+    .ftr-in{max-width:64rem;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem}
+    .ftr p{font-size:0.875rem}
+    .ftr-links{display:flex;flex-wrap:wrap;gap:1.5rem}
+    .ftr-links a{font-size:0.8125rem;color:#94a3b8;transition:color 0.2s}
+    .ftr-links a:hover{color:#8b0000}
     </style>
   </head>
   <body>
@@ -405,7 +420,20 @@
     </nav></div>
 
     <div id="app"></div>
-    <footer class="site-footer"><div class="site-footer-inner"><p>&copy; <span id="year"></span> Bucky Board. All rights reserved.</p></div></footer>
+    <footer class="ftr">
+        <div class="ftr-in">
+          <p>&copy; <script>document.write(new Date().getFullYear())</script> Bucky Board. All rights reserved.</p>
+          <div class="ftr-links">
+            <a href="housing.html">Housing</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="deals.html">Deals</a>
+            <a href="activities.html">Activities</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="email.html">Email</a>
+            <a href="about.html">About</a>
+          </div>
+        </div>
+      </footer>
     <script>document.getElementById('year').textContent=new Date().getFullYear();</script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
@@ -466,7 +494,7 @@
     /* ==== HEURISTIC ==== */
     function analyze(h,rows){const m=(s,kw)=>kw.some(k=>s.toLowerCase().includes(k));const mp={};mp.imageField=h.find(x=>m(x,['image','img','photo','picture','thumb']));if(!mp.imageField)mp.imageField=h.find(x=>{const v=String(rows[0]?.[x]||'');return v.startsWith('http')&&v.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)/i)});mp.titleField=h.find(x=>m(x,['name','title','product','item','subject']))||h[0];mp.categoryField=h.find(x=>m(x,['type','category','cat','tag','classification']));mp.priceField=h.find(x=>m(x,['monthly rent','rent','price','cost','amount','budget']));mp.linkField=h.find(x=>m(x,['link','url','web','site','href']));mp.dateField=h.find(x=>m(x,['date','time','year','created']));mp.emailField=h.find(x=>m(x,['email','mail']));mp.phoneField=h.find(x=>m(x,['phone','tel','cell','mobile','contact']));mp.addressField=h.find(x=>m(x,['address','location','city','place','street']));mp.latField=h.find(x=>m(x,['latitude','lat']));mp.longField=h.find(x=>m(x,['longitude','long','lng']));mp.descriptionField=h.find(x=>m(x,['a bit about yourself','other information','about','description','desc','looking for','info','note','detail']));if(!mp.descriptionField){let best,mx=0;const ex=Object.values(mp).filter(Boolean);h.forEach(x=>{if(ex.includes(x))return;let t=0,c=0;for(let i=0;i<Math.min(rows.length,10);i++){const v=rows[i][x];if(typeof v==='string'){t+=v.length;c++}}const a=c?t/c:0;if(a>mx){mx=a;best=x}});if(mx>20&&best)mp.descriptionField=best}if(mp.categoryField===mp.descriptionField)mp.categoryField=undefined;mp.roomField=h.find(x=>m(x,['rooms for rent','spots available','number of rooms']))||h.find(x=>m(x,['bedrooms','beds','br']));mp.originField=h.find(x=>m(x,['meet-up location','meet-up','location','origin','from']));mp.destinationField=h.find(x=>m(x,['destination','to']));mp.departureTimeField=h.find(x=>m(x,['departure date/time','departure','leave']));mp.returnTimeField=h.find(x=>m(x,['return date/time','return','back']));mp.capacityField=h.find(x=>m(x,['number of students you have room for','room for','seats','passengers','capacity']));const sk=['preferences','preference','bed','bath','duration','sqft','size','furnished','rooms','gas'];const used=[mp.titleField,mp.addressField,mp.descriptionField,mp.imageField,mp.priceField,mp.linkField,mp.dateField,mp.emailField,mp.phoneField,mp.latField,mp.longField,mp.roomField,mp.originField,mp.destinationField,mp.departureTimeField,mp.returnTimeField,mp.capacityField].filter(Boolean);mp.featuresFields=h.filter(x=>!used.includes(x)&&m(x,sk));return{mapping:mp,summary:`Displaying ${rows.length} items.`}}
     /* ==== STATE ==== */
-    let st='LOADING',ds=null,err=null,tabId=TABS[0].id,view='grid',pb={min:0,max:5000},fl={minP:0,maxP:5000,rooms:'',cat:'',dur:''};
+    let st='LOADING',ds=null,err=null,tabId=TABS[0].id,view='grid',pb={min:0,max:5000},fl={minP:0,maxP:5000,rooms:'',cat:'',dur:'',q:''};
     function tab(){return TABS.find(t=>t.id===tabId)||TABS[0]}
     function ct(){const l=tabId.toLowerCase();if(l.includes('student'))return'student';if(l.includes('sale'))return'sale';if(l.includes('wanted'))return'wanted';if(l.includes('carpool')||l.includes('rides'))return'carpool';return'lease'}
     function hero(){const l=tabId.toLowerCase();if(l.includes('student'))return{t:"Find a Roommate",s:"Connect with students looking for housing."};if(l.includes('roommate'))return{t:"Roommates",s:"Find someone to share a place with."};if(l.includes('sale'))return{t:"Marketplace",s:"Merchandise For Sale"};if(l.includes('wanted'))return{t:"Marketplace",s:"Merchandise Wanted"};if(tabId==='Rides Available')return{t:"Carpool",s:"Rides Available"};if(tabId==='Carpool Requests')return{t:"Carpool",s:"Looking for a Ride"};return{t:"Sublets",s:"Find your perfect place."}}
@@ -474,9 +502,9 @@
     function sheetUrl(){const t=tab();return t.sid?`https://docs.google.com/spreadsheets/d/${t.sid}/edit#gid=${t.gid}`:null}
     function roomLbl(){if(!ds||!ds.mapping.roomField)return'Bedrooms';const h=ds.mapping.roomField.toLowerCase();if(h.includes('rent')||h.includes('spot')||h.includes('avail')||h.includes('left'))return'Rooms for Rent';if(h.includes('room'))return'Rooms';return'Bedrooms'}
     /* ==== FETCH ==== */
-    async function fetchData(){st='LOADING';err=null;ds=null;render();const t=tab();try{const r=await fetch(`https://docs.google.com/spreadsheets/d/${t.sid}/export?format=csv&gid=${t.gid}`);if(!r.ok)throw new Error(r.status===404?"Sheet not found.":"Failed to load.");const csv=await r.text();const{headers:h,rows}=parseCSV(csv);if(!rows.length){if(csv.toLowerCase().includes('<!doctype html>'))throw new Error("Bad GID.");throw new Error("This list is currently empty.")}const a=analyze(h,rows);let mn=0,mx=5000;if(a.mapping.priceField){const ps=rows.map(r=>{const v=r[a.mapping.priceField];return typeof v==='number'?v:parseFloat(String(v).replace(/[^0-9.]/g,''))}).filter(n=>!isNaN(n));if(ps.length){mn=Math.floor(Math.min(...ps));mx=Math.ceil(Math.max(...ps))}}mn=Math.floor(mn/10)*10;mx=Math.ceil(mx/10)*10;if(mx===mn)mx+=100;pb={min:mn,max:mx};fl={minP:mn,maxP:mx,rooms:'',cat:'',dur:''};ds={name:tabId,rows,columns:h,mapping:a.mapping,summary:a.summary};st='READY'}catch(e){err=e.message;st='ERROR'}render();if(st==='READY'&&tabId==='Sublets')startGeo();if(st==='READY'&&view==='map'&&tabId==='Sublets')initMap()}
+    async function fetchData(){st='LOADING';err=null;ds=null;render();const t=tab();try{const r=await fetch(`https://docs.google.com/spreadsheets/d/${t.sid}/export?format=csv&gid=${t.gid}`);if(!r.ok)throw new Error(r.status===404?"Sheet not found.":"Failed to load.");const csv=await r.text();const{headers:h,rows}=parseCSV(csv);if(!rows.length){if(csv.toLowerCase().includes('<!doctype html>'))throw new Error("Bad GID.");throw new Error("This list is currently empty.")}const a=analyze(h,rows);let mn=0,mx=5000;if(a.mapping.priceField){const ps=rows.map(r=>{const v=r[a.mapping.priceField];return typeof v==='number'?v:parseFloat(String(v).replace(/[^0-9.]/g,''))}).filter(n=>!isNaN(n));if(ps.length){mn=Math.floor(Math.min(...ps));mx=Math.ceil(Math.max(...ps))}}mn=Math.floor(mn/10)*10;mx=Math.ceil(mx/10)*10;if(mx===mn)mx+=100;pb={min:mn,max:mx};fl={minP:mn,maxP:mx,rooms:'',cat:'',dur:'',q:''};ds={name:tabId,rows,columns:h,mapping:a.mapping,summary:a.summary};st='READY'}catch(e){err=e.message;st='ERROR'}render();if(st==='READY'&&tabId==='Sublets')startGeo();if(st==='READY'&&view==='map'&&tabId==='Sublets')initMap()}
     function durField(){if(!ds)return null;return(ds.mapping.featuresFields||[]).find(f=>f.toLowerCase().includes('duration'))||null}
-    function filtered(){if(!ds)return[];const df=durField();return ds.rows.filter(r=>{if(ds.mapping.priceField){const v=r[ds.mapping.priceField];const n=typeof v==='number'?v:parseFloat(String(v).replace(/[^0-9.]/g,''));if(!isNaN(n)&&(n<fl.minP||n>fl.maxP))return false}if(fl.rooms&&ds.mapping.roomField){const v=r[ds.mapping.roomField];const n=typeof v==='number'?v:parseFloat(String(v).match(/\d+/)?.[0]||'0');if(!isNaN(n)){const t=parseInt(fl.rooms);if(fl.rooms==='4'){if(n<4)return false}else{if(n!==t)return false}}}if(fl.cat&&ds.mapping.categoryField){const v=r[ds.mapping.categoryField];if(String(v||'')!==fl.cat)return false}if(fl.dur&&df){const v=r[df];if(String(v||'')!==fl.dur)return false}return true})}
+    function filtered(){if(!ds)return[];const df=durField();return ds.rows.filter(r=>{if(ds.mapping.priceField){const v=r[ds.mapping.priceField];const n=typeof v==='number'?v:parseFloat(String(v).replace(/[^0-9.]/g,''));if(!isNaN(n)&&(n<fl.minP||n>fl.maxP))return false}if(fl.rooms&&ds.mapping.roomField){const v=r[ds.mapping.roomField];const n=typeof v==='number'?v:parseFloat(String(v).match(/\d+/)?.[0]||'0');if(!isNaN(n)){const t=parseInt(fl.rooms);if(fl.rooms==='4'){if(n<4)return false}else{if(n!==t)return false}}}if(fl.cat&&ds.mapping.categoryField){const v=r[ds.mapping.categoryField];if(String(v||'')!==fl.cat)return false}if(fl.dur&&df){const v=r[df];if(String(v||'')!==fl.dur)return false}if(fl.q){const ql=fl.q.toLowerCase();const flds=[ds.mapping.titleField,ds.mapping.descriptionField,ds.mapping.categoryField,ds.mapping.addressField,ds.mapping.originField,ds.mapping.destinationField,ds.mapping.emailField,ds.mapping.phoneField];let hit=false;for(const f of flds){if(f&&r[f]&&String(r[f]).toLowerCase().includes(ql)){hit=true;break}}if(!hit&&ds.mapping.featuresFields){for(const f of ds.mapping.featuresFields){if(r[f]&&String(r[f]).toLowerCase().includes(ql)){hit=true;break}}}if(!hit)return false}return true})}
     /* ==== HELPERS ==== */
     function E(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
     function fp(p){if(!p)return'';return p.includes('$')?p:'$'+p}
@@ -518,6 +546,7 @@
     o+=`<div class="bb-hero"><h1>${E(h.t)}</h1><p>${E(h.s)}</p></div>`;
     o+=`<div class="bb-actions"><button class="bb-btn bb-btn-outline" onclick="fetchData()"${st==='LOADING'?' disabled':''}><span${st==='LOADING'?' class="anim-spin"':''} style="display:inline-flex">${I.refresh}</span><span>Refresh</span></button><button class="bb-btn bb-btn-primary" onclick="openF('add')">${I.plus}<span>Post Listing</span></button><button class="bb-btn bb-btn-danger" onclick="openF('delete')">${I.trash}<span>Delete</span></button></div>`;
     o+=`<div class="bb-tabs"><div class="bb-tabs-inner">`;TABS.forEach((tb,i)=>{const a=tabId===tb.id;o+=`<button class="bb-tab${a?' active':''}" onclick="switchTab('${tb.id}')"><span style="display:inline-flex;color:${a?'var(--indigo-500)':'var(--slate-400)'}">${tabIcon(tb.id)}</span><span class="tab-label">${E(tb.id)}</span></button>`});o+=`</div></div>`;
+    if(st==='READY'&&ds){const ph=tabId==='Sublets'?'Search sublets by address, description, or details…':(tabId==='Roommates'?'Search roommates by name, description, or details…':'Search listings…');const hasQ=fl.q&&fl.q.length>0;o+=`<div class="bb-search"><div class="bb-search-wrap"><span class="bb-search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><input id="bb-search-input" class="bb-search-input" type="text" placeholder="${E(ph)}" value="${E(fl.q||'')}" oninput="onSearch(this)" autocomplete="off"/><button class="bb-search-clear${hasQ?' show':''}" onclick="clearSearch()" aria-label="Clear search" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div></div>`;}
     if(su)o+=``;
     if(isLease)o+=`<div class="bb-view-toggle"><div class="bb-view-toggle-inner"><button class="bb-view-btn${view==='grid'?' active':''}" onclick="setV('grid')" title="Grid View">${I.grid}</button><button class="bb-view-btn${view==='map'?' active':''}" onclick="setV('map')" title="Map View">${I.map}</button></div></div>`;
     if(showFilt&&st==='READY'){const rng=pb.max-pb.min,step=rng<=100?1:rng<=500?5:rng<=2000?10:rng<=10000?50:100;const mnP=pb.max===pb.min?0:((fl.minP-pb.min)/(pb.max-pb.min))*100;const mxP=pb.max===pb.min?100:((fl.maxP-pb.min)/(pb.max-pb.min))*100;const hf=fl.minP>pb.min||fl.maxP<pb.max||fl.rooms!==''||fl.cat!==''||fl.dur!=='';const sg=rl==='Rooms for Rent'?'Room for Rent':(rl.endsWith('s')?rl.slice(0,-1):rl);const sr=!isMerch;const showCat=isMerch&&cats.length>0;const df=durField();const durs=df?[...new Set(ds.rows.map(r=>String(r[df]||'')).filter(Boolean))].sort():[];const showDur=isLease&&durs.length>0;
@@ -540,7 +569,9 @@
     function onRoom(el){fl.rooms=el.value;applyFilters()}
     function onCat(el){fl.cat=el.value;applyFilters()}
     function onDur(el){fl.dur=el.value;applyFilters()}
-    function clearFl(){fl={minP:pb.min,maxP:pb.max,rooms:'',cat:'',dur:''};render()}
+    function clearFl(){fl={minP:pb.min,maxP:pb.max,rooms:'',cat:'',dur:'',q:''};render()}
+    function onSearch(el){fl.q=el.value;const btn=document.querySelector('.bb-search-clear');if(btn){if(fl.q&&fl.q.length>0)btn.classList.add('show');else btn.classList.remove('show')}applyFilters()}
+    function clearSearch(){fl.q='';const inp=document.getElementById('bb-search-input');if(inp)inp.value='';const btn=document.querySelector('.bb-search-clear');if(btn)btn.classList.remove('show');applyFilters();if(inp)inp.focus()}
     /* ==== BOOT ==== */
     fetchData();
     </script>

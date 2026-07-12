@@ -25,10 +25,6 @@
       .nav a{padding:0.5rem 0.875rem;border-radius:9999px;font-size:0.8125rem;font-weight:600;color:var(--s500);transition:all 0.2s}
       .nav a:hover{color:var(--s800);background:var(--s50)}
       .nav a.active{color:var(--r700);background:var(--r50)}
-      .ftr{background:#FAF7F2;color:var(--s500);padding:1.5rem;border-top:1px solid var(--s200);margin-top:auto}
-      .ftr-in{max-width:64rem;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem}
-      .ftr p{font-size:0.875rem}
-      .ftr-links{display:flex;gap:1.5rem}.ftr-links a{font-size:0.8125rem;color:var(--s400);transition:color 0.2s}.ftr-links a:hover{color:var(--r700)}
       .page{flex:1;background:#FAF7F2}
       .email-hero{padding:5rem 1.5rem 2rem;background:#FAF7F2;text-align:center;position:relative;overflow:hidden}
       .email-hero::before{content:'';position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:80%;height:160%;background:radial-gradient(ellipse,rgba(139,0,0,0.025) 0%,transparent 70%);pointer-events:none}
@@ -71,6 +67,13 @@
       body.nav-open .nav-mobile a:nth-child(7){animation-delay:0.23s}
       body.nav-open .nav-mobile a:nth-child(8){animation-delay:0.26s}
       @media(max-width:640px){.nav{display:none !important}.nav-toggle{display:flex}}
+    /* === Sitewide footer === */
+    .ftr{background:#FAF7F2;color:#64748b;padding:1.5rem;border-top:1px solid #e2e8f0;margin-top:auto}
+    .ftr-in{max-width:64rem;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem}
+    .ftr p{font-size:0.875rem}
+    .ftr-links{display:flex;flex-wrap:wrap;gap:1.5rem}
+    .ftr-links a{font-size:0.8125rem;color:#94a3b8;transition:color 0.2s}
+    .ftr-links a:hover{color:#8b0000}
     </style>
   </head>
   <body>
@@ -131,18 +134,20 @@
       </div>
     </div>
 
-    <footer class="ftr"><div class="ftr-in">
-      <p>&copy; <script>document.write(new Date().getFullYear())</script> Bucky Board. All rights reserved.</p>
-      <div class="ftr-links">
-        <a href="housing.html">Housing</a>
-        <a href="marketplace.html">Marketplace</a>
-        <a href="deals.html">Deals</a>
-        <a href="activities.html">Activities</a>
-        <a href="jobs.html">Jobs</a>
-        <a href="email.html">Email</a>
-        <a href="about.html">About</a>
-      </div>
-    </div></footer>
+    <footer class="ftr">
+        <div class="ftr-in">
+          <p>&copy; <script>document.write(new Date().getFullYear())</script> Bucky Board. All rights reserved.</p>
+          <div class="ftr-links">
+            <a href="housing.html">Housing</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="deals.html">Deals</a>
+            <a href="activities.html">Activities</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="email.html">Email</a>
+            <a href="about.html">About</a>
+          </div>
+        </div>
+      </footer>
 
     <script>
     function toggleNav(){document.body.classList.toggle('nav-open')}
