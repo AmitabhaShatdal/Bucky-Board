@@ -32,7 +32,7 @@
     a { text-decoration: none; color: inherit; }
 
     /* ── HEADER ───────────────────────────── */
-    .hdr { background: var(--bg); border-bottom: 1px solid var(--s200); position: sticky; top: 0; z-index: 50; }
+    .hdr { background: var(--w); border-bottom: 1px solid var(--s200); position: sticky; top: 0; z-index: 50; }
     .hdr-in { max-width: 72rem; margin: 0 auto; display: flex; height: 4.5rem; align-items: center; justify-content: space-between; padding: 0 1.5rem; }
     .logo { display: flex; align-items: center; gap: 0.75rem; }
     .logo-mark { width: 2rem; height: 2rem; background: var(--r700); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-family: GentiumBookW, Georgia, serif; font-weight: 700; font-size: 1.125rem; color: var(--w); }
@@ -152,12 +152,8 @@
 </head>
 <body>
 
-  <header class="hdr">
-    <div class="hdr-in">
-      <a href="index.html" class="logo">
-        <img src="BBFavicon.png" alt="Bucky Board" style="width:2rem;height:2rem;border-radius:0.5rem;display:block;object-fit:cover">
-        <div class="logo-text">Bucky Board</div>
-      </a>
+    <header class="hdr"><div class="hdr-in">
+      <a href="index.html" class="logo"><img src="BBFavicon.png" alt="Bucky Board" style="width:2rem;height:2rem;border-radius:0.5rem;display:block;object-fit:cover"><div class="logo-text">Bucky Board</div></a>
       <nav class="nav">
         <a href="housing.html">Housing</a>
         <a href="marketplace.html">Marketplace</a>
@@ -165,22 +161,21 @@
         <a href="activities.html">Activities</a>
         <a href="jobs.html">Jobs</a>
         <a href="email.html">Email</a>
+        <a href="foundation.html">Foundation</a>
         <a href="about.html">About</a>
       </nav>
       <button class="nav-toggle" onclick="toggleNav()" aria-label="Menu"><span></span><span></span></button>
-    </div>
-  </header>
-  <div class="nav-overlay" onclick="if(event.target===this)toggleNav()">
-    <nav class="nav-mobile">
+    </div></header>
+    <div class="nav-overlay" onclick="if(event.target===this)toggleNav()"><nav class="nav-mobile">
       <a href="housing.html">Housing</a>
       <a href="marketplace.html">Marketplace</a>
       <a href="deals.html">Deals</a>
       <a href="activities.html">Activities</a>
       <a href="jobs.html">Jobs</a>
       <a href="email.html">Email</a>
+      <a href="foundation.html">Foundation</a>
       <a href="about.html">About</a>
-    </nav>
-  </div>
+    </nav></div>
 
   <section class="hero">
     <img src="BBFavicon.png" alt="Bucky Board" style="width:8rem;height:8rem;border-radius:1.5rem;margin:1.5rem auto 0;display:block">
@@ -241,20 +236,19 @@
     </div>
   </section>
 
-  <footer class="ftr">
-      <div class="ftr-in">
-        <p>&copy; <script>document.write(new Date().getFullYear())</script> Bucky Board. All rights reserved.</p>
-        <div class="ftr-links">
-          <a href="housing.html">Housing</a>
-          <a href="marketplace.html">Marketplace</a>
-          <a href="deals.html">Deals</a>
-          <a href="activities.html">Activities</a>
-          <a href="jobs.html">Jobs</a>
-          <a href="email.html">Email</a>
-          <a href="about.html">About</a>
-        </div>
+      <footer class="ftr"><div class="ftr-in">
+      <p>&copy; <script>document.write(new Date().getFullYear())</script> Bucky Board. All rights reserved.</p>
+      <div class="ftr-links">
+        <a href="housing.html">Housing</a>
+        <a href="marketplace.html">Marketplace</a>
+        <a href="deals.html">Deals</a>
+        <a href="activities.html">Activities</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="email.html">Email</a>
+        <a href="foundation.html">Foundation</a>
+        <a href="about.html">About</a>
       </div>
-    </footer>
+    </div></footer>
 
   <script>
     function toggleNav(){document.body.classList.toggle('nav-open')}
