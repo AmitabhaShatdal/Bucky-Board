@@ -252,10 +252,14 @@
 
     /* Filter bar (provider type for services, price for merch) */
     .filter-bar{
-      display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;
+      display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;align-items:center;
       margin-bottom:1rem;
     }
     .filter-bar-tight{margin-top:-0.5rem}
+    .filter-label{
+      font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
+      color:var(--slate-500);margin-right:0.25rem;
+    }
     .filter-pill{
       display:inline-flex;align-items:center;gap:0.375rem;
       padding:0.375rem 0.875rem;font-size:0.8125rem;font-weight:600;
@@ -263,6 +267,7 @@
       border:1px solid var(--slate-200);border-radius:9999px;
       transition:all 0.2s;
     }
+    .filter-pill svg{flex-shrink:0}
     .filter-pill:hover{border-color:var(--slate-300)}
     .filter-pill.active{color:var(--r-700);background:var(--r-50);border-color:var(--r-200)}
 
@@ -318,6 +323,7 @@
     .badge-price-r{color:var(--r-600);font-size:1.125rem;font-weight:700;border:none;padding:0;background:none}
     .badge-bb{color:var(--w);background:linear-gradient(135deg,var(--r-600),var(--r-700));border-color:var(--r-700)}
 
+
     /* Sale-specific small class */
     .card-sale-class-sm{font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--r-600);background:var(--r-50);padding:0.125rem 0.5rem;border-radius:0.25rem;border:1px solid var(--r-100);display:inline-block;margin-bottom:0.5rem}
 
@@ -352,6 +358,7 @@
 
     /* Service card specifics */
     .card-svc-provider{font-size:0.75rem;color:var(--slate-500);font-weight:600;margin-bottom:0.5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .card-svc-provider .by{font-weight:500;color:var(--slate-400)}
     .card-svc-provider .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .card-svc-title{font-size:1.125rem;font-weight:700;color:var(--slate-800);line-height:1.3;margin-bottom:0.375rem;transition:color 0.2s}
     .card:hover .card-svc-title{color:var(--r-600)}
@@ -861,7 +868,25 @@
       empty:'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>',
       grad:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
       shield:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+      landmark:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>',
+      user:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
     };
+
+    /* ==== PROVIDER TYPES (services) ====
+       The Services sheet's provider-type column holds exactly one of these four
+       values. Listed in the order they should appear in the filter bar. */
+    const PROVIDER_TYPES = [
+      { key:'bucky',   label:'Bucky Board', icon:'shield'   },
+      { key:'uw',      label:'UW-Madison',  icon:'landmark' },
+      { key:'student', label:'Student',     icon:'user'     },
+      { key:'alumni',  label:'Alumni',      icon:'grad'     },
+    ];
+
+    // Returns the matching entry, or null for a blank/unrecognized value.
+    function providerMeta(raw){
+      const txt = String(raw||'').trim();
+      return PROVIDER_TYPES.find(p => p.label === txt) || null;
+    }
 
     /* ==== CONFIG ==== */
     // Sheet IDs (existing) + new Services sheet
@@ -909,7 +934,7 @@
     let ds      = null;       // {rows, columns, mapping}
     let err     = null;
     let dRows   = [];         // currently displayed rows
-    let svcFilter = 'all';    // 'all' | 'student' | 'bucky'
+    let svcFilter = 'all';    // 'all' or a PROVIDER_TYPES key: 'bucky' | 'uw' | 'student' | 'alumni'
     let svcPriceFilter = 'all'; // 'all' | 'free' | 'priced'
     let searchByTab = {};   // tab id -> query string
 
@@ -1066,10 +1091,8 @@
         const f = ds.mapping.providerTypeField;
         if(f){
           rows = rows.filter(r=>{
-            const v = String(r[f]||'').toLowerCase();
-            if(svcFilter==='student') return v.includes('student');
-            if(svcFilter==='bucky')   return v.includes('bucky');
-            return true;
+            const pm = providerMeta(r[f]);
+            return pm ? pm.key === svcFilter : false;
           });
         }
       }
@@ -1176,22 +1199,14 @@
 
     function serviceC(r,mp,i){
       const provider = mp.providerNameField?String(r[mp.providerNameField]||'').trim():'';
-      const providerType = mp.providerTypeField?String(r[mp.providerTypeField]||'').trim():'';
       const title = mp.titleField?String(r[mp.titleField]||'').trim():'';
       const cat   = mp.categoryField?String(r[mp.categoryField]||'').trim():'';
       const desc  = mp.descriptionField?String(r[mp.descriptionField]||'').trim():'';
       const price = mp.priceField?String(r[mp.priceField]||'').trim():'';
-      const isBB = providerType.toLowerCase().includes('bucky');
-      const ptypeBadge = providerType
-        ? (isBB
-            ? `<span class="badge badge-bb">${I.shield} Bucky Board</span>`
-            : `<span class="badge badge-r-pill">${I.grad} ${E(providerType)}</span>`)
-        : '';
-      const catBadge = cat ? `<span class="badge badge-emerald-pill">${E(cat)}</span>` : '';
-      const meta = ptypeBadge + catBadge;
+      const meta = cat ? `<span class="badge badge-emerald-pill">${E(cat)}</span>` : '';
       return `<div class="card" onclick="openD(${i})">
         <div class="card-body">
-          ${provider?`<div class="card-svc-provider"><span class="nm">${E(provider)}</span></div>`:''}
+          ${provider?`<div class="card-svc-provider"><span class="by">By</span> <span class="nm">${E(provider)}</span></div>`:''}
           ${title?`<div class="card-svc-title">${E(title)}</div>`:''}
           ${meta?`<div class="card-svc-meta">${meta}</div>`:''}
           ${desc?`<div class="card-desc clamp4">${E(desc)}</div>`:''}
@@ -1237,6 +1252,7 @@
       const ca  = mp.categoryField?String(r[mp.categoryField]||''):'';
       const provider = mp.providerNameField?String(r[mp.providerNameField]||''):'';
       const providerType = mp.providerTypeField?String(r[mp.providerTypeField]||''):'';
+      const pmD = providerMeta(providerType);
 
       let mH = ti, sH = ca;
       if(iC){
@@ -1259,7 +1275,7 @@
 
       const svcTopRow = iS ? `
         <div class="modal-timings">
-          ${providerType?`<div class="modal-timing-box departure"><span class="label">Provider</span><div class="val">${providerType.toLowerCase().includes('bucky')?I.shield:I.grad} ${E(providerType)}</div></div>`:''}
+          ${pmD?`<div class="modal-timing-box departure"><span class="label">Provider Type</span><div class="val">${I[pmD.icon]} ${pmD.label}</div></div>`:''}
           ${ca?`<div class="modal-timing-box return"><span class="label">Category</span><div class="val">${I.tag} ${E(ca)}</div></div>`:''}
           ${pr?`<div class="modal-timing-box seats"><span class="label">Price</span><div class="val">${E(fp(pr))}</div></div>`:''}
         </div>` : '';
@@ -1411,14 +1427,22 @@
       if(c==='service' && st==='READY' && ds && ds.mapping.providerTypeField){
         const pubF = ds.mapping.publishStatusField;
         const liveRows = pubF ? ds.rows.filter(r => String(r[pubF]||'').trim().toLowerCase() === 'published') : ds.rows;
-        const types = [...new Set(liveRows.map(r=>String(r[ds.mapping.providerTypeField]||'').trim()).filter(Boolean))];
-        const hasStudent = types.some(x=>x.toLowerCase().includes('student'));
-        const hasBB = types.some(x=>x.toLowerCase().includes('bucky'));
-        if(hasStudent || hasBB){
+        const present = new Set();
+        liveRows.forEach(r=>{
+          const pm = providerMeta(r[ds.mapping.providerTypeField]);
+          if(pm) present.add(pm.key);
+        });
+        // If the active filter's type is no longer in the data (e.g. after a
+        // refresh), fall back to All rather than showing an empty grid.
+        if(svcFilter!=='all' && !present.has(svcFilter)) svcFilter = 'all';
+
+        const pills = PROVIDER_TYPES.filter(p=>present.has(p.key));
+        // A filter bar is only useful once there's more than one type to choose between.
+        if(pills.length > 1){
           o += `<div class="filter-bar">
-                  <button class="filter-pill${svcFilter==='all'?' active':''}" onclick="setSvcFilter('all')">All offerings</button>
-                  ${hasStudent?`<button class="filter-pill${svcFilter==='student'?' active':''}" onclick="setSvcFilter('student')">${I.grad} Student-run</button>`:''}
-                  ${hasBB?`<button class="filter-pill${svcFilter==='bucky'?' active':''}" onclick="setSvcFilter('bucky')">${I.shield} Bucky Board</button>`:''}
+                  <span class="filter-label">Provider type</span>
+                  <button class="filter-pill${svcFilter==='all'?' active':''}" onclick="setSvcFilter('all')">All</button>
+                  ${pills.map(p=>`<button class="filter-pill${svcFilter===p.key?' active':''}" onclick="setSvcFilter('${p.key}')">${I[p.icon]} ${p.label}</button>`).join('')}
                 </div>`;
         }
       }
@@ -1431,7 +1455,8 @@
         const hasPriced = liveRows.some(r => !isFreeService(r, ds.mapping));
         if(hasFree && hasPriced){
           o += `<div class="filter-bar filter-bar-tight">
-                  <button class="filter-pill${svcPriceFilter==='all'?' active':''}" onclick="setSvcPriceFilter('all')">All prices</button>
+                  <span class="filter-label">Price</span>
+                  <button class="filter-pill${svcPriceFilter==='all'?' active':''}" onclick="setSvcPriceFilter('all')">All</button>
                   <button class="filter-pill${svcPriceFilter==='free'?' active':''}" onclick="setSvcPriceFilter('free')">Free</button>
                   <button class="filter-pill${svcPriceFilter==='priced'?' active':''}" onclick="setSvcPriceFilter('priced')">Priced</button>
                 </div>`;
