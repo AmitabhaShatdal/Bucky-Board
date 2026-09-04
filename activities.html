@@ -798,36 +798,121 @@
           }).catch(function(){});
       }));
 
-      // ── 2. Music (REST API, 5 weeks, all pages in parallel) ──────
-      var musicBucket=[];
-      var musicBase='https://music.wisc.edu/wp-json/tribe/events/v1/events'
-        +'?starts_after='+dateStr(new Date(now.getFullYear(),now.getMonth(),now.getDate()-1))
-        +'&ends_before='+dateStr(new Date(now.getFullYear(),now.getMonth(),now.getDate()+35))
-        +'&per_page=50';
-      function processMusicPage(data){
-        if(!data||!Array.isArray(data.events))return 0;
-        data.events.forEach(function(ev){
+      // ── 2. Music (WP REST API: uw_event CPT, 5 weeks, paginated) ──
+      // NOTE: wp/v2/uw_event cannot filter or sort by event start date
+      // (orderby has no meta_value, and after/before filter on PUBLISH
+      // date). So we pull every page, then window + sort client-side.
+      var musicBucket=[],musicSeen={},musicCatNames={};
+      var MUSIC_API='https://music.wisc.edu/wp-json/wp/v2/uw_event';
+      var MUSIC_FIELDS='id,link,title,content,meta,uw-event-category';
+      var MUSIC_PER_PAGE=100;
+      var MUSIC_MAX_PAGES=25; // safety cap so a bad header can't loop forever
+      var musicWinNow=now.getTime();                                  // in-progress events stay visible
+      var musicWinEnd=new Date(now.getFullYear(),now.getMonth(),now.getDate()+35).getTime();
+
+      function musicPageUrl(p){
+        return MUSIC_API+'?per_page='+MUSIC_PER_PAGE+'&page='+p
+              +'&_fields='+encodeURIComponent(MUSIC_FIELDS);
+      }
+      // Flatten the event block HTML to one line. <br> and block-level closers
+      // are real line breaks in the source, so they become "; " separators
+      // instead of collapsing into spaces and running sentences together.
+      function stripHTML(s){
+        var t=String(s||'');
+        t=t.replace(/<!--[\s\S]*?-->/g,'\u0001');              // "Content from the UW Events Block"
+        t=t.replace(/<br\s*\/?>/gi,'\u0001');
+        t=t.replace(/<\/(p|div|li|h[1-6]|tr|figure|blockquote)>/gi,'\u0001');
+        t=t.replace(/<[^>]+>/g,'');
+        t=decodeHTML(t);
+        t=t.replace(/[^\S\u0001]+/g,' ');                       // collapse spaces/&nbsp;, keep breaks
+        var parts=t.split('\u0001').map(function(x){return x.trim();})
+                   .filter(function(x){return x;});
+        return parts.reduce(function(acc,seg){
+          if(!acc)return seg;
+          // already-punctuated segments read as prose; the rest get semicolons
+          return acc+(/[.!?:;,\u2026]$/.test(acc)?' ':'; ')+seg;
+        },'');
+      }
+      // Resolves to {list,totalPages} or null when the page doesn't exist.
+      // Page N+1 returns HTTP 400 rest_post_invalid_page_number -> null.
+      function fetchMusicPage(p){
+        return fetch(musicPageUrl(p)).then(function(r){
+          if(!r.ok)return null;
+          var tp=parseInt(r.headers.get('X-WP-TotalPages'),10);
+          return r.json().then(function(list){
+            return {list:Array.isArray(list)?list:[],totalPages:isNaN(tp)?0:tp};
+          });
+        }).catch(function(){return null;});
+      }
+      function processMusicPage(list){
+        list.forEach(function(ev){
+          var meta=ev.meta||{};
+          if(!meta._uw_event_start_date)return;              // editors can save without one
+          var start=new Date(meta._uw_event_start_date);      // ISO 8601 UTC, e.g. 2026-09-06T00:30:00.000Z
+          if(isNaN(start.getTime()))return;
+          var ts=start.getTime();
+          var end=meta._uw_event_end_date?new Date(meta._uw_event_end_date):null;
+          if(end&&isNaN(end.getTime()))end=null;
+          // Drop only once the event has finished; an event running right now stays.
+          if((end?end.getTime():ts)<musicWinNow)return;
+          if(ts>=musicWinEnd)return;                          // 5 weeks out from today
+          if(musicSeen[ev.id])return;
+          musicSeen[ev.id]=true;
           musicBucket.push({
-            title:decodeHTML(ev.title||''),
-            start:new Date(ev.start_date),
-            end:ev.end_date?new Date(ev.end_date):null,
-            location:ev.venue&&ev.venue.venue?ev.venue.venue:'',
-            category:ev.categories&&ev.categories.length?ev.categories[0].name:'',
-            desc:(ev.description||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&#(\d+);/g,function(_,n){return String.fromCharCode(n);}).replace(/&[a-z]+;/g,function(e){var d=document.createElement('div');d.innerHTML=e;return d.textContent;}).trim(),
-            url:ev.url||''
+            title:decodeHTML((ev.title&&ev.title.rendered)||''),
+            start:start,
+            end:end,
+            location:decodeHTML(meta._uw_event_location||''),
+            catIds:ev['uw-event-category']||[],
+            category:'',
+            desc:stripHTML((ev.content&&ev.content.rendered)||''),
+            url:ev.link||meta._uw_event_url||''
           });
         });
-        return data.total_pages||1;
       }
-      var musicPromise=fetch(musicBase+'&page=1')
-        .then(function(r){return r.json();})
-        .then(function(data){
-          var total=processMusicPage(data);
-          var extras=[];
-          for(var p=2;p<=total;p++) extras.push(fetch(musicBase+'&page='+p).then(function(r){return r.json();}).then(processMusicPage));
+      // Fallback when X-WP-TotalPages isn't readable (CORS): walk pages
+      // one at a time until one comes back short, empty, or 400s.
+      function musicWalk(p){
+        if(p>MUSIC_MAX_PAGES)return;
+        return fetchMusicPage(p).then(function(res){
+          if(!res||!res.list.length)return;
+          processMusicPage(res.list);
+          if(res.list.length>=MUSIC_PER_PAGE)return musicWalk(p+1);
+        });
+      }
+      // Category IDs -> names, for the tag shown on each card.
+      var musicCatsPromise=fetch('https://music.wisc.edu/wp-json/wp/v2/uw-event-category?per_page=100&_fields=id,name')
+        .then(function(r){return r.ok?r.json():[];})
+        .then(function(terms){
+          if(Array.isArray(terms))terms.forEach(function(t){musicCatNames[t.id]=decodeHTML(t.name||'');});
+        }).catch(function(){});
+
+      var musicPagesPromise=fetchMusicPage(1).then(function(res){
+        if(!res)return;
+        processMusicPage(res.list);
+        if(res.totalPages>1){
+          // Header available: grab pages 2..N in parallel.
+          var last=Math.min(res.totalPages,MUSIC_MAX_PAGES),extras=[];
+          for(var p=2;p<=last;p++){
+            extras.push(fetchMusicPage(p).then(function(r){if(r)processMusicPage(r.list);}));
+          }
           return Promise.all(extras);
+        }
+        // No header, but page 1 was full -> there may be more.
+        if(!res.totalPages&&res.list.length>=MUSIC_PER_PAGE)return musicWalk(2);
+      });
+
+      var musicPromise=Promise.all([musicCatsPromise,musicPagesPromise])
+        .then(function(){
+          musicBucket.sort(function(a,b){return a.start-b.start;});
+          musicBucket.forEach(function(ev){
+            for(var i=0;i<ev.catIds.length;i++){
+              if(musicCatNames[ev.catIds[i]]){ev.category=musicCatNames[ev.catIds[i]];break;}
+            }
+            hasItems=true;
+            insertSorted(renderMusicCard(ev),ev.start.getTime());
+          });
         })
-        .then(function(){musicBucket.forEach(function(ev){hasItems=true;insertSorted(renderMusicCard(ev),ev.start.getTime());});})
         .catch(function(e){console.log('Music error:',e);});
 
       // ── 3. Student events (Google Sheet) ─────────────────────────
