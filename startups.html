@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Built by Badgers — startups building the next big thing together.">
+    <title>Startups - Bucky Board</title>
+    <link rel="icon" href="BBFavicon.png" type="image/png">
+    <style>
+      :root{
+        --s50:#f8fafc;--s100:#f1f5f9;--s200:#e2e8f0;--s300:#cbd5e1;
+        --s400:#94a3b8;--s500:#64748b;--s600:#475569;--s700:#334155;
+        --s800:#1e293b;--s900:#0f172a;
+        --r700:#8b0000;--r800:#6b0000;--r50:#fdf2f2;--w:#fff;--bg:#f5f5f5;
+        --gold:#FFDE6F;--gold-dark:#E8C44A;--gold-light:#FFF4D2;--gold-deep:#C9A227;
+        --rose:#FFC9E3;--rose-light:#FFD6EA;--rose-glow:rgba(255,201,227,0.3);
+        --em50:#ecfdf5;--em100:#d1fae5;--em700:#047857;
+      }
+      *{box-sizing:border-box;margin:0;padding:0}
+      html{height:100%;scroll-behavior:smooth}
+      body{
+        font-family:GentiumBookW,Georgia,serif;
+        background:#FAF7F2;color:var(--s900);
+        line-height:1.6;-webkit-font-smoothing:antialiased;
+        min-height:100vh;display:flex;flex-direction:column;
+      }
+      @font-face{font-family:GentiumBookW;font-weight:400;src:url(GentiumBook-Regular.woff2)}
+      @font-face{font-family:GentiumBookW;font-weight:700;src:url(GentiumBook-Bold.woff2)}
+      @font-face{font-family:GentiumBookW;font-weight:400;font-style:italic;src:url(GentiumBook-Italic.woff2)}
+      @font-face{font-family:GentiumBookW;font-weight:700;font-style:italic;src:url(GentiumBook-BoldItalic.woff2)}
+      ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}
+      ::-webkit-scrollbar-thumb{background:var(--s300);border-radius:10px}
+      a{text-decoration:none;color:inherit}img{display:block}
+      button{font-family:inherit}
+
+      /* ── HEADER ── */
+      .hdr{background:var(--w);border-bottom:1px solid var(--s200);position:sticky;top:0;z-index:50}
+      .hdr-in{max-width:72rem;margin:0 auto;display:flex;height:4.5rem;align-items:center;justify-content:space-between;padding:0 1.5rem}
+      .logo{display:flex;align-items:center;gap:0.75rem}
+      .logo-mark{width:2rem;height:2rem;background:var(--r700);border-radius:0.5rem;display:flex;align-items:center;justify-content:center;font-family:GentiumBookW,Georgia,serif;font-weight:700;font-size:1.125rem;color:var(--w)}
+      .logo-text{color:var(--r700);font-weight:700;font-size:1.25rem;letter-spacing:-0.02em}
+      .nav{display:flex;align-items:center;gap:0.25rem}
+      .nav a{padding:0.5rem 0.875rem;border-radius:9999px;font-size:0.8125rem;font-weight:600;color:var(--s500);transition:all 0.2s}
+      .nav a:hover{color:var(--s800);background:rgba(0,0,0,0.05)}
+      .nav a.active{color:var(--r700);background:var(--r50)}
+
+      /* ── FOOTER ── */
+      .ftr{background:#FAF7F2;color:#64748b;padding:1.5rem;border-top:1px solid #e2e8f0;margin-top:auto}
+      .ftr-in{max-width:64rem;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem}
+      .ftr p{font-size:0.875rem;color:var(--s500)}
+      .ftr-links{display:flex;flex-wrap:wrap;gap:1.5rem}
+      .ftr-links a{font-size:0.8125rem;color:var(--s400);transition:color 0.2s}
+      .ftr-links a:hover{color:var(--r700)}
+
+      /* ── PAGE ── */
+      .page{flex:1}
+
+      /* ── ANIMATIONS ── */
+      @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+      .rise{opacity:0;animation:rise 0.8s cubic-bezier(0.22,1,0.36,1) forwards}
+      .d1{animation-delay:0.08s}
+      .d2{animation-delay:0.22s}
+      .d3{animation-delay:0.38s}
+      .d4{animation-delay:0.54s}
+
+      /* ── HERO ── */
+      .content{
+        max-width:52rem;
+        margin:0 auto;
+        padding:5rem 1.5rem 2rem;
+        text-align:center;
+      }
+      .page-heading h1{
+        font-size:clamp(2.25rem, 6vw, 3.25rem);
+        font-weight:700;
+        color:var(--s900);
+        letter-spacing:-0.03em;
+        line-height:1.1;
+      }
+      .page-heading h1 span{
+        display:block;
+        font-size:clamp(1.125rem, 2.5vw, 1.5rem);
+        font-style:italic;
+        font-weight:400;
+        color:var(--r700);
+        margin-top:0.875rem;
+        letter-spacing:-0.01em;
+        line-height:1.35;
+      }
+
+      /* ── CONTROLS ── */
+      .controls{
+        max-width:52rem;margin:0 auto;
+        padding:0 1.5rem;
+        display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;
+      }
+      .search-wrap{position:relative;flex:1;min-width:14rem}
+      .search-input{
+        width:100%;
+        padding:0.75rem 2.75rem 0.75rem 2.75rem;
+        border:1px solid var(--s200);border-radius:9999px;
+        background:var(--w);font-family:inherit;font-size:0.9375rem;
+        color:var(--s900);
+        box-shadow:0 1px 2px rgba(0,0,0,0.04);
+        transition:border-color 0.15s,box-shadow 0.15s;
+      }
+      .search-input::placeholder{color:var(--s400)}
+      .search-input:focus{outline:none;border-color:var(--gold-dark);box-shadow:0 0 0 3px rgba(201,162,39,0.14)}
+      .search-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--s400);pointer-events:none;display:flex}
+      .search-clear{
+        position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);
+        width:1.75rem;height:1.75rem;border-radius:9999px;
+        border:none;background:var(--s100);color:var(--s500);
+        display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;
+      }
+      .search-clear.show{display:flex}
+      .search-clear:hover{background:var(--s200);color:var(--s700)}
+      .filter-wrap{position:relative}
+      .filter-select{
+        appearance:none;background:var(--w);
+        border:1px solid var(--s200);color:var(--s700);
+        font-weight:600;font-family:inherit;font-size:0.875rem;
+        padding:0.75rem 2.5rem 0.75rem 1.125rem;
+        border-radius:9999px;cursor:pointer;
+        box-shadow:0 1px 2px rgba(0,0,0,0.04);
+        transition:border-color 0.15s,box-shadow 0.15s;
+      }
+      .filter-select:focus{outline:none;border-color:var(--gold-dark);box-shadow:0 0 0 3px rgba(201,162,39,0.14)}
+      .filter-chev{position:absolute;right:0.875rem;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--s400);display:flex}
+      .count-label{
+        max-width:52rem;margin:0 auto;
+        padding:0.875rem 1.5rem 0;
+        font-size:0.8125rem;color:var(--s400);font-style:italic;
+      }
+
+      /* ── GRID ── */
+      .startups-section{max-width:52rem;margin:0 auto;padding:1rem 1.5rem 0}
+      .startup-grid{
+        display:grid;
+        grid-template-columns:repeat(2,1fr);
+        gap:1px;
+        background:var(--s200);
+        border:1px solid var(--s200);
+      }
+      @media(max-width:640px){.startup-grid{grid-template-columns:1fr}}
+      .startup{
+        background:#FAF7F2;
+        border:none;
+        padding:1.375rem 1.5rem;
+        display:flex;align-items:flex-start;gap:1rem;
+        cursor:pointer;text-align:left;
+        transition:background 0.18s;
+        min-height:7rem;
+        width:100%;
+      }
+      .startup:hover{background:#fffefe}
+      .startup-mark{
+        width:2.75rem;height:2.75rem;border-radius:0.75rem;
+        background:var(--gold-light);color:var(--gold-deep);
+        display:flex;align-items:center;justify-content:center;
+        font-weight:700;font-size:1.0625rem;flex-shrink:0;
+        transition:background 0.18s,color 0.18s;
+      }
+      .startup:hover .startup-mark{background:var(--gold);color:var(--s900)}
+      .startup-main{flex:1;min-width:0}
+      .startup-name{
+        font-size:1rem;font-weight:700;color:var(--s900);
+        letter-spacing:-0.01em;line-height:1.3;
+      }
+      .startup-slug{
+        font-size:0.875rem;color:var(--s500);line-height:1.55;margin-top:0.25rem;
+        display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+      }
+      .startup-meta{display:flex;flex-wrap:wrap;gap:0.375rem;margin-top:0.75rem}
+      .tag{
+        display:inline-flex;align-items:center;gap:0.25rem;
+        font-size:0.625rem;font-weight:700;
+        letter-spacing:0.06em;text-transform:uppercase;
+        border-radius:9999px;padding:0.2rem 0.5625rem;
+        border:1px solid;white-space:nowrap;
+      }
+      .tag-stage{background:var(--gold-light);color:var(--gold-deep);border-color:var(--gold)}
+      .tag-year{background:var(--s50);color:var(--s500);border-color:var(--s200)}
+      .tag-hiring{background:var(--em50);color:var(--em700);border-color:var(--em100)}
+
+      .startup-msg{
+        grid-column:1/-1;background:#FAF7F2;
+        padding:3rem 1.5rem;text-align:center;
+        font-size:0.9375rem;color:var(--s400);font-style:italic;
+      }
+      .startup-filler{background:#FAF7F2}
+      @media(max-width:640px){.startup-filler{display:none}}
+
+      /* ── CALLOUT ── */
+      .callout{max-width:52rem;margin:0 auto;padding:3rem 1.5rem 5rem}
+      .callout-inner{
+        background:var(--w);
+        border:1px solid var(--s200);
+        border-left:3px solid var(--gold-dark);
+        border-radius:1rem;
+        padding:1.5rem 1.75rem;
+        box-shadow:0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.04);
+      }
+      .callout-eyebrow{
+        font-size:0.5625rem;font-weight:700;
+        letter-spacing:0.24em;text-transform:uppercase;
+        color:var(--s400);margin-bottom:0.625rem;
+      }
+      .callout-inner p{font-size:1rem;color:var(--s600);line-height:1.8}
+
+      /* ── MODAL ── */
+      .modal-overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem}
+      .modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,0.22);backdrop-filter:blur(8px)}
+      .modal-box{
+        position:relative;background:var(--w);
+        width:100%;max-width:38rem;max-height:88vh;overflow-y:auto;
+        border-radius:1.25rem;
+        box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);
+        animation:mdIn 0.22s cubic-bezier(0.22,1,0.36,1);
+      }
+      @keyframes mdIn{from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+      .modal-close{
+        position:absolute;top:1rem;right:1rem;
+        padding:0.5rem;border-radius:9999px;
+        background:var(--s100);color:var(--s500);
+        border:none;cursor:pointer;display:flex;z-index:10;transition:background 0.2s;
+      }
+      .modal-close:hover{background:var(--s200)}
+      .modal-hdr{padding:2rem 2rem 1.25rem;display:flex;align-items:flex-start;gap:1.125rem}
+      .modal-mark{
+        width:3.5rem;height:3.5rem;border-radius:1rem;
+        background:var(--gold);color:var(--s900);
+        display:flex;align-items:center;justify-content:center;
+        font-weight:700;font-size:1.375rem;flex-shrink:0;
+      }
+      .modal-title{font-size:1.5rem;font-weight:700;color:var(--s900);letter-spacing:-0.02em;line-height:1.2;padding-right:2rem}
+      .modal-slug{font-size:0.9375rem;color:var(--s500);margin-top:0.3125rem;line-height:1.55}
+      .modal-tags{display:flex;flex-wrap:wrap;gap:0.375rem;margin-top:0.75rem}
+      .modal-body{padding:0 2rem 2rem}
+      .modal-body-inner{border-top:1px solid var(--s100);padding-top:1.5rem}
+      .detail{margin-bottom:1.5rem}
+      .detail:last-child{margin-bottom:0}
+      .detail h3{
+        font-size:0.5625rem;font-weight:700;
+        text-transform:uppercase;letter-spacing:0.14em;
+        color:var(--s400);margin-bottom:0.4375rem;
+      }
+      .detail p{font-size:0.9375rem;color:var(--s600);line-height:1.8}
+      .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+      @media(max-width:480px){.detail-grid{grid-template-columns:1fr}}
+      .jobs-box{background:var(--em50);border:1px solid var(--em100);border-radius:0.875rem;padding:1rem 1.125rem}
+      .jobs-box h3{color:var(--em700)}
+      .jobs-box p{color:var(--s600);font-size:0.9375rem}
+      .modal-links{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--s100)}
+      .slink{
+        display:inline-flex;align-items:center;gap:0.375rem;
+        font-size:0.8125rem;font-weight:700;
+        color:var(--s600);background:var(--s50);
+        border:1px solid var(--s200);border-radius:9999px;
+        padding:0.4375rem 0.875rem;transition:all 0.2s;max-width:100%;
+      }
+      .slink span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .slink:hover{color:var(--r700);background:var(--r50);border-color:rgba(139,0,0,0.15)}
+      .slink svg{flex-shrink:0}
+
+      /* ── MOBILE NAV ── */
+      .nav-toggle{display:none;flex-direction:column;justify-content:center;align-items:center;width:2.5rem;height:2.5rem;background:none;border:none;cursor:pointer;padding:0;z-index:60;position:relative}
+      .nav-toggle span{display:block;width:1.125rem;height:1.5px;background:var(--s900);border-radius:1px;transition:all 0.35s cubic-bezier(0.4,0,0.2,1);position:absolute}
+      .nav-toggle span:first-child{transform:translateY(-3.5px)}
+      .nav-toggle span:last-child{transform:translateY(3.5px)}
+      body.nav-open .nav-toggle span:first-child{transform:rotate(45deg)}
+      body.nav-open .nav-toggle span:last-child{transform:rotate(-45deg)}
+      .nav-overlay{position:fixed;top:4.5rem;left:0;right:0;bottom:0;background:rgba(245,245,245,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:45;opacity:0;visibility:hidden;transition:opacity 0.35s cubic-bezier(0.4,0,0.2,1),visibility 0.35s}
+      body.nav-open .nav-overlay{opacity:1;visibility:visible}
+      .nav-mobile{max-width:72rem;margin:0 auto;padding:1rem 1.5rem;display:flex;flex-direction:column}
+      .nav-mobile a{display:block;padding:0.875rem 0;font-size:1.25rem;font-weight:700;color:var(--s900);border-bottom:1px solid var(--s200);transition:color 0.2s;opacity:0;transform:translateY(8px);animation:none}
+      body.nav-open .nav-mobile a{animation:navFade 0.3s ease forwards}
+      .nav-mobile a:last-child{border-bottom:none}
+      .nav-mobile a:hover{color:var(--r700)}
+      .nav-mobile a.active{color:var(--r700)}
+      @keyframes navFade{to{opacity:1;transform:translateY(0)}}
+      body.nav-open .nav-mobile a:nth-child(1){animation-delay:0.05s}
+      body.nav-open .nav-mobile a:nth-child(2){animation-delay:0.08s}
+      body.nav-open .nav-mobile a:nth-child(3){animation-delay:0.11s}
+      body.nav-open .nav-mobile a:nth-child(4){animation-delay:0.14s}
+      body.nav-open .nav-mobile a:nth-child(5){animation-delay:0.17s}
+      body.nav-open .nav-mobile a:nth-child(6){animation-delay:0.2s}
+      body.nav-open .nav-mobile a:nth-child(7){animation-delay:0.23s}
+      body.nav-open .nav-mobile a:nth-child(8){animation-delay:0.26s}
+      body.nav-open .nav-mobile a:nth-child(9){animation-delay:0.29s}
+      @media(max-width:640px){.nav{display:none !important}.nav-toggle{display:flex}}
+    </style>
+  </head>
+  <body>
+    <header class="hdr"><div class="hdr-in">
+      <a href="index.html" class="logo"><img src="BBFavicon.png" alt="Bucky Board" style="width:2rem;height:2rem;border-radius:0.5rem;display:block;object-fit:cover"><div class="logo-text">Bucky Board</div></a>
+      <nav class="nav">
+        <a href="housing.html">Housing</a>
+        <a href="marketplace.html">Marketplace</a>
+        <a href="deals.html">Deals</a>
+        <a href="activities.html">Activities</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="email.html">Email</a>
+        <a href="foundation.html">Foundation</a>
+        <a href="startups.html" class="active">Startups</a>
+        <a href="about.html">About</a>
+      </nav>
+      <button class="nav-toggle" onclick="toggleNav()" aria-label="Menu"><span></span><span></span></button>
+    </div></header>
+    <div class="nav-overlay" onclick="if(event.target===this)toggleNav()"><nav class="nav-mobile">
+      <a href="housing.html">Housing</a>
+      <a href="marketplace.html">Marketplace</a>
+      <a href="deals.html">Deals</a>
+      <a href="activities.html">Activities</a>
+      <a href="jobs.html">Jobs</a>
+      <a href="email.html">Email</a>
+      <a href="foundation.html">Foundation</a>
+      <a href="startups.html" class="active">Startups</a>
+      <a href="about.html">About</a>
+    </nav></div>
+
+    <div class="page">
+
+      <div class="content">
+        <div class="page-heading rise d1">
+          <h1>Built by Badgers <span>Building the next big thing together.</span></h1>
+        </div>
+      </div>
+
+      <div class="controls rise d2">
+        <div class="search-wrap">
+          <div class="search-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <input type="text" id="search" class="search-input" placeholder="Search startups, founders, stage, roles&hellip;" autocomplete="off">
+          <button class="search-clear" id="search-clear" aria-label="Clear search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="filter-wrap">
+          <select id="stage-filter" class="filter-select" aria-label="Filter by stage">
+            <option value="">All stages</option>
+            <option value="idea">Idea</option>
+            <option value="mvp">MVP</option>
+            <option value="seed">Seed</option>
+            <option value="growth">Growth</option>
+          </select>
+          <div class="filter-chev">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="count-label" id="count-label"></div>
+
+      <div class="startups-section rise d3">
+        <div class="startup-grid" id="startup-grid">
+          <div class="startup-msg" id="startup-loading">Loading&hellip;</div>
+        </div>
+      </div>
+
+      <div class="callout rise d4">
+        <div class="callout-inner">
+          <div class="callout-eyebrow">Student founders</div>
+          <p>If you're a student founder or interested in starting, we'd love to hear from you. We work with Badger-run ventures and help however we can.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="ftr"><div class="ftr-in">
+      <p>&copy; <script>document.write(new Date().getFullYear())</script> Bucky Board. All rights reserved.</p>
+      <div class="ftr-links">
+        <a href="housing.html">Housing</a>
+        <a href="marketplace.html">Marketplace</a>
+        <a href="deals.html">Deals</a>
+        <a href="activities.html">Activities</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="email.html">Email</a>
+        <a href="foundation.html">Foundation</a>
+        <a href="startups.html">Startups</a>
+        <a href="about.html">About</a>
+      </div>
+    </div></footer>
+
+    <script>
+    function toggleNav(){document.body.classList.toggle('nav-open')}
+    document.querySelectorAll('.nav-overlay a').forEach(function(a){a.addEventListener('click',function(){document.body.classList.remove('nav-open')})});
+
+    /* ── Google Sheets startup data ── */
+    (function(){
+      var SHEET_ID = '1nK71xEo0mvD144i9bXvBRZrqBcPdsnOMa2ilTgpzwy8';
+      var CSV_URL  = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=0';
+
+      var startups = [];
+
+      function parseCSV(text){
+        var rows = []; var cur = ''; var inQuote = false; var row = [];
+        for(var i = 0; i < text.length; i++){
+          var ch = text[i];
+          if(inQuote){
+            if(ch === '"' && text[i+1] === '"'){ cur += '"'; i++; }
+            else if(ch === '"'){ inQuote = false; }
+            else { cur += ch; }
+          } else {
+            if(ch === '"'){ inQuote = true; }
+            else if(ch === ','){ row.push(cur.trim()); cur = ''; }
+            else if(ch === '\n' || (ch === '\r' && text[i+1] === '\n')){
+              row.push(cur.trim()); cur = ''; rows.push(row); row = [];
+              if(ch === '\r') i++;
+            }
+            else { cur += ch; }
+          }
+        }
+        if(cur || row.length){ row.push(cur.trim()); rows.push(row); }
+        return rows;
+      }
+
+      function findCol(hdr, names){
+        for(var n = 0; n < names.length; n++){
+          for(var i = 0; i < hdr.length; i++){
+            if(hdr[i].indexOf(names[n]) === 0) return i;
+          }
+        }
+        return -1;
+      }
+
+      function initials(name){
+        var parts = name.replace(/[^A-Za-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
+        if(!parts.length) return '?';
+        if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      }
+
+      function normalizeURL(u){
+        if(!u) return '';
+        if(/^https?:\/\//i.test(u)) return u;
+        return 'https://' + u;
+      }
+
+      function prettyURL(u){
+        return u.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
+      }
+
+      function el(tag, cls, text){
+        var e = document.createElement(tag);
+        if(cls) e.className = cls;
+        if(text != null) e.textContent = text;
+        return e;
+      }
+
+      function showMsg(msg){
+        document.getElementById('startup-grid').innerHTML =
+          '<div class="startup-msg">' + msg + '</div>';
+        document.getElementById('count-label').textContent = '';
+      }
+
+      var ICON_LINK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+      var ICON_MAIL = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>';
+      var ICON_X    = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+      /* ── MODAL ── */
+      function openModal(s){
+        var overlay = el('div', 'modal-overlay');
+        overlay.id = 'startup-modal';
+
+        var backdrop = el('div', 'modal-backdrop');
+        backdrop.addEventListener('click', closeModal);
+        overlay.appendChild(backdrop);
+
+        var box = el('div', 'modal-box');
+
+        var close = el('button', 'modal-close');
+        close.setAttribute('type', 'button');
+        close.setAttribute('aria-label', 'Close');
+        close.innerHTML = ICON_X;
+        close.addEventListener('click', closeModal);
+        box.appendChild(close);
+
+        var hdr = el('div', 'modal-hdr');
+        hdr.appendChild(el('div', 'modal-mark', initials(s.name)));
+        var htxt = el('div');
+        htxt.style.minWidth = '0';
+        htxt.appendChild(el('div', 'modal-title', s.name));
+        if(s.slug) htxt.appendChild(el('div', 'modal-slug', s.slug));
+        var tags = el('div', 'modal-tags');
+        if(s.stage)   tags.appendChild(el('span', 'tag tag-stage', s.stage));
+        if(s.founded) tags.appendChild(el('span', 'tag tag-year', 'Founded ' + s.founded));
+        if(s.jobs)    tags.appendChild(el('span', 'tag tag-hiring', 'Hiring Badgers'));
+        if(tags.children.length) htxt.appendChild(tags);
+        hdr.appendChild(htxt);
+        box.appendChild(hdr);
+
+        var body = el('div', 'modal-body');
+        var inner = el('div', 'modal-body-inner');
+
+        function detailBlock(label, value){
+          var d = el('div', 'detail');
+          d.appendChild(el('h3', null, label));
+          d.appendChild(el('p', null, value));
+          return d;
+        }
+
+        if(s.about) inner.appendChild(detailBlock('About', s.about));
+
+        if(s.founders) inner.appendChild(detailBlock('Founders', s.founders));
+
+        if(s.jobs){
+          var jb = el('div', 'detail jobs-box');
+          jb.appendChild(el('h3', null, 'Badger jobs'));
+          jb.appendChild(el('p', null, s.jobs));
+          inner.appendChild(jb);
+        }
+
+        if(s.website || s.email){
+          var links = el('div', 'modal-links');
+          if(s.website){
+            var w = document.createElement('a');
+            w.className = 'slink';
+            w.href = normalizeURL(s.website);
+            w.target = '_blank';
+            w.rel = 'noopener noreferrer';
+            w.innerHTML = ICON_LINK;
+            w.appendChild(el('span', null, prettyURL(s.website)));
+            links.appendChild(w);
+          }
+          if(s.email){
+            var m = document.createElement('a');
+            m.className = 'slink';
+            m.href = 'mailto:' + s.email;
+            m.innerHTML = ICON_MAIL;
+            m.appendChild(el('span', null, s.email));
+            links.appendChild(m);
+          }
+          inner.appendChild(links);
+        }
+
+        body.appendChild(inner);
+        box.appendChild(body);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal(){
+        var m = document.getElementById('startup-modal');
+        if(m) m.remove();
+        document.body.style.overflow = '';
+      }
+
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape') closeModal();
+      });
+
+      /* ── CARDS ── */
+      function buildCard(s){
+        var card = el('button', 'startup');
+        card.setAttribute('type', 'button');
+
+        card.appendChild(el('div', 'startup-mark', initials(s.name)));
+
+        var main = el('div', 'startup-main');
+        main.appendChild(el('div', 'startup-name', s.name));
+        if(s.slug) main.appendChild(el('div', 'startup-slug', s.slug));
+
+        var meta = el('div', 'startup-meta');
+        if(s.stage)   meta.appendChild(el('span', 'tag tag-stage', s.stage));
+        if(s.founded) meta.appendChild(el('span', 'tag tag-year', s.founded));
+        if(s.jobs)    meta.appendChild(el('span', 'tag tag-hiring', 'Hiring'));
+        if(meta.children.length) main.appendChild(meta);
+
+        card.appendChild(main);
+        card.addEventListener('click', function(){ openModal(s); });
+        return card;
+      }
+
+      /* ── FILTER + SEARCH ── */
+      function applyFilters(){
+        var q = (document.getElementById('search').value || '').trim().toLowerCase();
+        var stage = document.getElementById('stage-filter').value;
+
+        var clear = document.getElementById('search-clear');
+        if(q) clear.classList.add('show'); else clear.classList.remove('show');
+
+        var matches = startups.filter(function(s){
+          if(stage && s.stage.trim().toLowerCase() !== stage) return false;
+          if(!q) return true;
+          return s._search.indexOf(q) !== -1;
+        });
+
+        var grid = document.getElementById('startup-grid');
+        grid.innerHTML = '';
+
+        if(!matches.length){
+          grid.innerHTML = '<div class="startup-msg">No startups match your search.</div>';
+        } else {
+          matches.forEach(function(s){ grid.appendChild(buildCard(s)); });
+          if(matches.length % 2 === 1) grid.appendChild(el('div', 'startup-filler'));
+        }
+
+        var label = document.getElementById('count-label');
+        if(!q && !stage){
+          label.textContent = startups.length + (startups.length === 1 ? ' startup' : ' startups');
+        } else {
+          label.textContent = matches.length + ' of ' + startups.length +
+            (startups.length === 1 ? ' startup' : ' startups');
+        }
+      }
+
+      document.getElementById('search').addEventListener('input', applyFilters);
+      document.getElementById('stage-filter').addEventListener('change', applyFilters);
+      document.getElementById('search-clear').addEventListener('click', function(){
+        document.getElementById('search').value = '';
+        applyFilters();
+        document.getElementById('search').focus();
+      });
+
+      /* ── LOAD ── */
+      function render(rows){
+        if(rows.length < 2){ showMsg('No startups listed yet.'); return; }
+
+        var hdr = rows[0].map(function(h){ return h.toLowerCase().trim(); });
+        var iName     = findCol(hdr, ['name']);
+        var iSlug     = findCol(hdr, ['slug', 'short description']);
+        var iAbout    = findCol(hdr, ['about']);
+        var iStage    = findCol(hdr, ['stage']);
+        var iFounders = findCol(hdr, ['founders']);
+        var iFounded  = findCol(hdr, ['founded']);
+        var iJobs     = findCol(hdr, ['badger jobs']);
+        var iEmail    = findCol(hdr, ['contact', 'email']);
+        var iWebsite  = findCol(hdr, ['website']);
+        var iStatus   = findCol(hdr, ['status']);
+
+        if(iName < 0 || iStatus < 0){ showMsg('Spreadsheet format not recognized.'); return; }
+
+        function cell(row, idx){ return idx >= 0 ? (row[idx] || '').trim() : ''; }
+
+        for(var r = 1; r < rows.length; r++){
+          var row = rows[r];
+          if((row[iStatus] || '').trim().toLowerCase() !== 'published') continue;
+          var name = cell(row, iName);
+          if(!name) continue;
+          var s = {
+            name:     name,
+            slug:     cell(row, iSlug),
+            about:    cell(row, iAbout),
+            stage:    cell(row, iStage),
+            founders: cell(row, iFounders),
+            founded:  cell(row, iFounded),
+            jobs:     cell(row, iJobs),
+            email:    cell(row, iEmail),
+            website:  cell(row, iWebsite)
+          };
+          /* searchable across every field */
+          s._search = [s.name, s.slug, s.about, s.stage, s.founders,
+                       s.founded, s.jobs, s.email, s.website]
+                      .join(' ').toLowerCase();
+          startups.push(s);
+        }
+
+        if(!startups.length){ showMsg('No startups listed yet.'); return; }
+        applyFilters();
+      }
+
+      fetch(CSV_URL)
+        .then(function(r){ return r.text(); })
+        .then(function(t){ render(parseCSV(t)); })
+        .catch(function(){ showMsg('Unable to load startup data.'); });
+    })();
+    </script>
+  </body>
+</html>
