@@ -303,6 +303,10 @@
   var UW_URL  = 'https://studentjobs.hr.wisc.edu/cw/en-us/jobs.json';
 
   var salaryFilter=0, allJobs=[], loaded={uw:false,bb:false}, errors={uw:null,bb:null};
+  // Single shared "now" so every ASAP/immediate job gets an identical _startTs
+  // and therefore ties in the sort, letting the deadline tiebreak take over.
+  var NOW_TS=Date.now();
+  var NO_DEADLINE=8.64e15; // sentinel: sorts after every real deadline
 
   // ── HELPERS ──────────────────────────────────────────────────────────
   function E(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML}
@@ -434,7 +438,7 @@
     var closeStr=dl!==null&&dl>=0&&dl<=7?'<span class="pill pill-close" style="font-size:0.6875rem">Closes in '+dl+'d</span>'
       :(j.deadline&&j.deadline!=='Rolling'?'<span class="jc-close-txt">Closes '+E(j.deadline)+'</span>':'<span class="jc-close-txt">Rolling deadline</span>');
 
-    var searchBlob=[j.title,j.dept,j.brand,j.company,j.location,j.summary,j.type,j.remote,j.pay].filter(Boolean).join(' ').toLowerCase();return'<div class="job-card" data-id="'+E(j._id)+'" data-source="'+E(j._src)+'" data-salmin="'+j._salMin+'" data-startts="'+(j._startTs||0)+'" data-search="'+E(searchBlob)+'" onclick="openDetail(\''+E(j._id)+'\')">'
+    var searchBlob=[j.title,j.dept,j.brand,j.company,j.location,j.summary,j.type,j.remote,j.pay].filter(Boolean).join(' ').toLowerCase();return'<div class="job-card" data-id="'+E(j._id)+'" data-source="'+E(j._src)+'" data-salmin="'+j._salMin+'" data-startts="'+(j._startTs||0)+'" data-deadline="'+(j.deadlineDate&&j.deadlineDate.getTime?j.deadlineDate.getTime():NO_DEADLINE)+'" data-search="'+E(searchBlob)+'" onclick="openDetail(\''+E(j._id)+'\')">'
       +'<div class="co-logo" style="background:'+E(j.color)+'">'+E(j.logo)+'</div>'
       +'<div class="jc-body">'
         +'<div class="jc-head">'
@@ -486,7 +490,7 @@
     if(/^(tbd|n\/a|varies?|flexible|open|see listing|contact|ongoing)$/i.test(low))return noDate(raw);
 
     // ASAP / Immediately / Now → today
-    if(/^(asap|immediately|now|right away|open now|as soon as possible)$/i.test(low))return{ts:Date.now(),display:'ASAP',raw:raw};
+    if(/^(asap|immediately|immediate|immediate start|immediate opening|starts? immediately|available immediately|available now|available asap|now|starts? now|right away|open now|as soon as possible)$/i.test(low))return{ts:NOW_TS,display:'ASAP',raw:raw};
 
     var now=new Date(),yr=now.getFullYear();
     var m,d;
@@ -654,7 +658,26 @@
       var visible=cards.filter(function(c){return c.style.display!=='none'});
       var dated=visible.filter(function(c){return parseInt(c.getAttribute('data-startts')||0)>0});
       var undated=visible.filter(function(c){return parseInt(c.getAttribute('data-startts')||0)===0});
-      dated.sort(function(a,b){return parseInt(a.getAttribute('data-startts'))-parseInt(b.getAttribute('data-startts'))});
+      // Deadlines are compared by calendar day, not exact millisecond: sheet
+      // dates land at 23:59:59 local while UW sends true UTC instants, so two
+      // jobs closing the same day would otherwise never tie.
+      function dayKey(c){
+        var v=parseFloat(c.getAttribute('data-deadline'));
+        if(!v||v>=NO_DEADLINE)return NO_DEADLINE;
+        var d=new Date(v);
+        return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+      }
+      dated.sort(function(a,b){
+        var d=parseInt(a.getAttribute('data-startts'))-parseInt(b.getAttribute('data-startts'));
+        if(d)return d;
+        // Same start date (all ASAP jobs share one timestamp): closing soonest first.
+        var da=dayKey(a),db=dayKey(b);
+        if(da!==db)return da-db;
+        // Same start and same closing day: Bucky Board (sheet) listings first.
+        var sa=a.getAttribute('data-source')==='bb'?0:1;
+        var sb=b.getAttribute('data-source')==='bb'?0:1;
+        return sa-sb;
+      });
       dated.concat(undated).forEach(function(c){list.appendChild(c);});
     }
     var emp=document.getElementById('jobs-empty');if(emp){emp.style.display=vis===0?'flex':'none';var mainP=emp.querySelector('p.main');var subP=emp.querySelector('p.sub');if(vis===0&&mainP&&subP){if(q){mainP.textContent='No jobs match "'+q+'".';subP.textContent='Try a different keyword or clear your search.';}else{mainP.textContent='No listings match your filters';subP.textContent='Try clearing a filter or switching tabs.';}}}
@@ -667,6 +690,9 @@
     var html='';
     if(errors.uw){
       html+='<div class="uw-fallback"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div><strong>UW Student Jobs couldn\'t load directly</strong> (CORS restriction). <a href="https://studentjobs.hr.wisc.edu/cw/en-us/listing/" target="_blank" rel="noopener">Browse all UW Student Jobs &#x2197;</a> on their site.</div></div>';
+    }
+    if(errors.bb){
+      html+='<div class="uw-fallback"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div><strong>Bucky Board listings couldn\'t load right now.</strong> Please refresh in a moment &mdash; UW Student Jobs are still shown below.</div></div>';
     }
     if(allJobs.length)html+='<div class="job-list">'+allJobs.map(cardHtml).join('')+'</div>';
     html+='<div class="jobs-empty" id="jobs-empty" style="display:none"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><p class="main">No listings match your filters</p><p class="sub">Try clearing a filter or switching tabs.</p></div>';
@@ -696,7 +722,7 @@
             if(cleanSite&&j.SiteSuburb&&j.SiteSuburb.trim())cleanSite+=', '+j.SiteSuburb.trim();
             var cats=(j.CategoryList||[]).filter(function(c){return c.indexOf('Job Categories|')===0}).map(function(c){return c.replace('Job Categories|','')}).join(', ');
             allJobs.push({
-              _id:'uw-'+j.Id,_src:'uw',_salMin:salaryMin(pay),_startTs:(function(){var r=parseStart(ov.start||'');return(r.ts>0&&r.ts<Date.now())||(!r.ts&&!r.raw)?Date.now():r.ts;})(),_startDisplay:(function(){var r=parseStart(ov.start||'');if(r.ts>0&&r.ts<Date.now())return'ASAP';if(!r.ts)return r.raw||'ASAP';return r.display;})(),
+              _id:'uw-'+j.Id,_src:'uw',_salMin:salaryMin(pay),_startTs:(function(){var r=parseStart(ov.start||'');return(r.ts>0&&r.ts<Date.now())||(!r.ts&&!r.raw)?NOW_TS:r.ts;})(),_startDisplay:(function(){var r=parseStart(ov.start||'');if(r.ts>0&&r.ts<Date.now())return'ASAP';if(!r.ts)return r.raw||'ASAP';return r.display;})(),
               title:j.Title||'Untitled',
               dept:dept,brand:brand,
               company:company,logo:company.charAt(0).toUpperCase(),color:strColor(company),
@@ -740,12 +766,42 @@
 
   // ── FETCH BUCKY BOARD JOBS ────────────────────────────────────────────
   function fetchBBJobs(){
-    if(BB_SHEET_ID==='YOUR_SHEET_ID_HERE'){BB_DEMO.forEach(function(j){var r=parseStart(j.start||'');var past=r.ts>0&&r.ts<Date.now();var blank=!r.ts&&!r.raw;var asap=past||blank;allJobs.push(Object.assign({},j,{_startTs:asap?Date.now():r.ts,_startDisplay:asap?'ASAP':(r.ts?r.display:r.raw||'ASAP'),start:asap?'ASAP':(r.ts?r.display:r.raw||'ASAP')}));});loaded.bb=true;renderJobs();return}
-    var url='https://docs.google.com/spreadsheets/d/'+BB_SHEET_ID+'/export?format=csv&gid='+BB_SHEET_GID;
-    fetch(url).then(function(r){return r.text()}).then(function(csv){
-      var rows=parseCSV(csv);if(rows.length<2){loaded.bb=true;renderJobs();return}
-      var hdrs=rows[0].map(function(h){return h.trim()});
-      function col(r,n){var i=hdrs.indexOf(n);return i>=0?(r[i]||'').trim():''}
+    var url='https://docs.google.com/spreadsheets/d/'+BB_SHEET_ID+'/export?format=csv&gid='+BB_SHEET_GID+'&cachebust='+Date.now();
+    fetch(url).then(function(res){
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      return res.text();
+    }).then(function(csv){
+      // A private sheet returns a sign-in HTML page instead of CSV.
+      if(/^\s*</.test(csv))throw new Error('Sheet is not publicly readable');
+      var rows=parseCSV(csv);if(rows.length<2){errors.bb=null;loaded.bb=true;renderJobs();return}
+
+      // Header lookup: case-insensitive, whitespace-tolerant, with aliases.
+      function norm(s){return String(s||'').replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim().toLowerCase()}
+      var hidx={};
+      rows[0].forEach(function(h,i){var k=norm(h);if(k&&!(k in hidx))hidx[k]=i});
+      var ALIAS={
+        'hours / week':['hours/week','hours per week','hours','weekly hours'],
+        'work type':['work setting','remote','remote?'],
+        'requirements':['qualifications','required qualifications'],
+        'description':['summary','job description','about the role'],
+        'apply':['apply url','apply link','application link','link'],
+        'recruiter email':['contact email','email'],
+        'start':['start date'],
+        'end':['end date'],
+        'deadline':['application deadline','close date','application close'],
+        'company':['organization','employer','org'],
+        'title':['job title','position','position title']
+      };
+      function idxOf(name){
+        var k=norm(name);
+        if(k in hidx)return hidx[k];
+        var alts=ALIAS[k]||[];
+        for(var a=0;a<alts.length;a++)if(alts[a] in hidx)return hidx[alts[a]];
+        // Last resort: a header that starts with the requested name.
+        for(var key in hidx)if(key.indexOf(k)===0)return hidx[key];
+        return -1;
+      }
+      function col(row,n){var i=idxOf(n);return i>=0?String(row[i]||'').trim():''}
       for(var i=1;i<rows.length;i++){
         var r=rows[i];if(!col(r,'Title'))continue;
         var bbDeadline=(function(s){
@@ -758,11 +814,14 @@
         var dept=col(r,'Company')||'Bucky Board';
         var pay=(col(r,'Pay')||'').trim();
         var bbSalMin=(function(s){var m=s&&s.match(/\$(\d+(?:\.\d+)?)/);return m?parseFloat(m[1]):0;})(pay);
-        allJobs.push({_id:'bb-'+i,_src:'bb',_salMin:bbSalMin,_startTs:(function(){var r=parseStart(col(r,'Start'));return(r.ts>0&&r.ts<Date.now())||(!r.ts&&!r.raw)?Date.now():r.ts;})(),_startDisplay:(function(){var r=parseStart(col(r,'Start'));if(r.ts>0&&r.ts<Date.now())return'ASAP';if(!r.ts)return r.raw||'ASAP';return r.display;})(),
+        var sr=parseStart(col(r,'Start'));
+        var srAsap=(sr.ts>0&&sr.ts<Date.now())||(!sr.ts&&!sr.raw);
+        var srDisplay=srAsap?'ASAP':(sr.ts?sr.display:(sr.raw||'ASAP'));
+        allJobs.push({_id:'bb-'+i,_src:'bb',_salMin:bbSalMin,_startTs:srAsap?NOW_TS:sr.ts,_startDisplay:srDisplay,
           title:col(r,'Title'),dept:dept,brand:'',company:dept,
           logo:col(r,'Logo')||dept.charAt(0).toUpperCase(),color:col(r,'Color')||strColor(dept),
           location:col(r,'Location')||'',remote:col(r,'Work Type')||'',
-          start:(function(){var r=parseStart(col(r,'Start'));if(r.ts>0&&r.ts<Date.now())return'ASAP';if(!r.ts)return r.raw||'ASAP';return r.display;})(),end:col(r,'End')||'',
+          start:srDisplay,end:col(r,'End')||'',
           hours:col(r,'Hours / Week'),schedule:col(r,'Schedule')||'',
           pay:pay||null,payPer:null,
           summary:col(r,'Description'),duties:col(r,'Duties')||col(r,'Description'),
@@ -778,18 +837,13 @@
           apply:col(r,'Apply'),recruiter:col(r,'Recruiter')||'',recruiterEmail:col(r,'Recruiter Email')||'',site:'',workType:'',categories:'',
           posted:col(r,'Timestamp')||''});
       }
+      errors.bb=null;loaded.bb=true;renderJobs();
+    }).catch(function(err){
+      console.error('BuckyBoard: sheet fetch failed',err);
+      errors.bb=err&&err.message?err.message:'fetch failed';
       loaded.bb=true;renderJobs();
-    }).catch(function(){BB_DEMO.forEach(function(j){allJobs.push(j)});loaded.bb=true;renderJobs()});
+    });
   }
-
-  // ── DEMO DATA ─────────────────────────────────────────────────────────
-  var BB_DEMO=[
-    {_id:'bb-d1',_src:'bb',_salMin:30,title:'Software Engineering Intern',dept:'Epic Systems',brand:'',company:'Epic Systems',logo:'E',color:'#c2001f',location:'Madison',remote:'Not Remote',start:'June 1, 2026',end:'Aug 15, 2026',hours:'40 hrs/week',schedule:'Mon–Fri, 9am–5pm',pay:'$30\u201335',payPer:'hr',summary:'Join Epic\u2019s summer intern class to build features used by millions of patients. Ship code in your first week alongside full-time engineers.',duties:'Build and ship features on a real product team. Attend weekly founder talks.',qualifications:'CS, CE, or related major. Strong problem-solving skills.',ksa:'Strong coding fundamentals in any language. Epic teaches their stack.',physical:'',appInstructions:'',contact:'',deptOverview:'',positions:'1',deadline:'April 30, 2025',deadlineDate:null,apply:'https://epic.com/careers',recruiter:'',site:'Verona, WI',workType:'',categories:''},
-    {_id:'bb-d2',_src:'bb',_salMin:16,title:'Marketing & Social Media Coordinator',dept:'The Kollege Klub',brand:'',company:'The Kollege Klub',logo:'K',color:'#7c3aed',location:'Madison',remote:'Not Remote',start:'May 1, 2026',end:'',hours:'~10 hrs/week',schedule:'Flexible around class schedule',pay:'$16',payPer:'hr',summary:'Run Instagram, TikTok, and email campaigns for Madison\u2019s oldest student bar. Great for Comm Arts or Marketing students.',duties:'Weekly content calendars, event promotion, analytics reporting.',qualifications:'Strong writing voice. Experience with Canva a plus.',ksa:'',physical:'',appInstructions:'',contact:'',deptOverview:'',positions:'1',deadline:'Rolling',deadlineDate:null,apply:'mailto:kk@kollege-klub.com',recruiter:'',site:'Madison, WI',workType:'',categories:''},
-    {_id:'bb-d3',_src:'bb',_salMin:0,title:'Policy Research Fellow',dept:'Wisconsin Institute for Public Policy',brand:'',company:'Wisconsin Institute for Public Policy',logo:'W',color:'#059669',location:'On-Campus',remote:'Not Remote',start:'August 1, 2026',end:'Aug 15, 2026',hours:'20 hrs/week',schedule:'Flexible weekdays',pay:null,payPer:'',summary:'Develop a research brief on a Wisconsin-specific policy issue and present at WIPP\u2019s annual symposium.',duties:'Faculty-mentored research, policy brief writing, symposium presentation.',qualifications:'Junior or senior. Poli Sci, Public Affairs, or Economics preferred.',ksa:'Strong writing sample required.',physical:'',appInstructions:'',contact:'',deptOverview:'',positions:'2',deadline:'April 25, 2025',deadlineDate:null,apply:'https://wipp.wisc.edu/apply',recruiter:'',site:'Madison, WI',workType:'',categories:''},
-    {_id:'bb-d4',_src:'bb',_salMin:25,title:'UX Design Intern',dept:'Northwestern Mutual',brand:'',company:'Northwestern Mutual',logo:'N',color:'#4f46e5',location:'Hybrid',remote:'Partially Remote',start:'June 1, 2026',end:'Aug 15, 2026',hours:'40 hrs/week',schedule:'Flexible hybrid schedule',pay:'$25\u201328',payPer:'hr',summary:'Support redesign of client-facing financial planning tools. Create Figma prototypes and run usability tests with real customers.',duties:'User research, Figma prototyping, usability testing, daily standups and design crits.',qualifications:'Portfolio required. Figma or Sketch experience.',ksa:'Accessibility design experience a bonus.',physical:'',appInstructions:'',contact:'',deptOverview:'',positions:'1',deadline:'May 5, 2025',deadlineDate:null,apply:'https://northwesternmutual.com/internships',recruiter:'',site:'Milwaukee, WI',workType:'',categories:''},
-    {_id:'bb-d5',_src:'bb',_salMin:0,title:'Peer Health Educator',dept:'UHS University Health Services',brand:'UW-Madison',company:'UHS University Health Services',logo:'U',color:'#8b0000',location:'On-Campus',remote:'Not Remote',start:'September 1, 2026',end:'',hours:'4\u20136 hrs/week',schedule:'Evenings and weekends as needed',pay:null,payPer:'',summary:'Run wellness workshops in residence halls on sexual health, stress management, and nutrition. Receive 20+ hours of training.',duties:'Facilitate peer workshops, attend training sessions, participate in health fairs.',qualifications:'Completion of UHS training. All majors welcome.',ksa:'Empathy and strong communication skills.',physical:'',appInstructions:'',contact:'uhs.wisc.edu/phe',deptOverview:'',positions:'Multiple',deadline:'Rolling',deadlineDate:null,apply:'https://uhs.wisc.edu/phe',recruiter:'',site:'UHS, Madison WI',workType:'',categories:''}
-  ];
 
   // ── DETAIL MODAL ──────────────────────────────────────────────────────
   function detailSec(heading,content){
