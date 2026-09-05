@@ -784,7 +784,8 @@
         'work type':['work setting','remote','remote?'],
         'requirements':['qualifications','required qualifications'],
         'description':['summary','job description','about the role'],
-        'apply':['apply url','apply link','application link','link'],
+        'application link':['apply','apply url','apply link','application url','link'],
+        'application instructions':['how to apply','apply instructions','instructions'],
         'recruiter email':['contact email','email'],
         'start':['start date'],
         'end':['end date'],
@@ -826,7 +827,7 @@
           pay:pay||null,payPer:null,
           summary:col(r,'Description'),duties:col(r,'Duties')||col(r,'Description'),
           qualifications:col(r,'Requirements'),ksa:'',physical:'',
-          appInstructions:'',contact:'',deptOverview:'',positions:'',
+          appInstructions:col(r,'Application Instructions'),contact:'',deptOverview:'',positions:'',
           deadline:col(r,'Deadline')||'Rolling',deadlineDate:(function(s){
             if(!s)return null;
             var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -834,7 +835,7 @@
             var d=new Date(parseInt(m[3]),parseInt(m[1])-1,parseInt(m[2]),23,59,59);
             return d;
           })(col(r,'Deadline')),
-          apply:col(r,'Apply'),recruiter:col(r,'Recruiter')||'',recruiterEmail:col(r,'Recruiter Email')||'',site:'',workType:'',categories:'',
+          apply:col(r,'Application Link'),recruiter:col(r,'Recruiter')||'',recruiterEmail:col(r,'Recruiter Email')||'',site:'',workType:'',categories:'',
           posted:col(r,'Timestamp')||''});
       }
       errors.bb=null;loaded.bb=true;renderJobs();
